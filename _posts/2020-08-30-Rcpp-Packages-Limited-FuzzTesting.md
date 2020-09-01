@@ -6,8 +6,6 @@ tags: [FuzzTesting]
 math: true
 ---
 
-**Limited Fuzz Testing**
-
 **Background**
 
 Testing a software application is always a tough job and time-consuming. To successfully identify bugs in your package we need to consider the following:
@@ -127,8 +125,6 @@ Here the `Invalid read of size 8` means the memory that the process is trying to
 
 The next error trace line showing `Address 0xba09720 is 0 bytes after a block of size 624 alloc'd` means that the address starting at the location 0xba09720, 0 bytes are allocated for a block of size 624 bytes.
 
-
-
 **accelerometry** : RcppDeepState found errors in blockaves_i_max(), blockaves_n_max(), blocksums_i_max(), blocksums_n_max(), sedbreaks_flags(), sedbreaks(). The [error log](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/accelerometry) has the log trace for all these functions.
 
 Most of the functions have an Invalid read error reported. Whereas the sedbreaks_flags() function has a Conditional jump or move depends on the uninitialized value(s) along with the Invalid read.
@@ -177,6 +173,7 @@ Most of the functions have an Invalid read error reported. Whereas the sedbreaks
 ```
 
 We have already discussed the invalid read and conditional jump above. Here `Uninitialised value was created by a heap allocation` means that the process is trying to access a heap location whose values are uninitialized and it traces back to line 38 in the function sedbreaks().
+
 **ambient** : RcppDeepState detected issues in 27 functions in the package ambient. Most of the functions have Invalid read and Conditional jump on uninitialized values. The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/ambient) has the log xtraces for all the functions.
 
 For example consider gen_value3d_c() function which revealed the following issues:
