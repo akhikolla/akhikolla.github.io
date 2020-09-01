@@ -81,7 +81,7 @@ Found errors in following packages(so far) using RcppDeepState
 
 The [Complete log files](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs) has the error log files which list the input along with the error trace for the functions in the packages.
 
-1. **adeba** : RcppDeepState detected a Conditional jump or move depends on uninitialised value in get_bandwidths() in adeba.cpp
+**adeba** : RcppDeepState detected a Conditional jump or move depends on uninitialised value in get_bandwidths() in adeba.cpp
 
 ```c++
 ==10696== Conditional jump or move depends on uninitialised value(s)
@@ -97,8 +97,7 @@ The [Complete log files](https://github.com/akhikolla/RcppDeepStateTest/tree/mas
 ```
 Here the `Conditional jump or move depends on the uninitialized value(s)` means that the execution of the program is altered due to the uninitialized value and Valgrind provides the trace to track the origin of the uninitialized values.
 
-
-2. **AGread** : RcppDeepState detected an Invalid read of size 4 in get_VM_C() function in the package. The error is shown below:
+**AGread** : RcppDeepState detected an Invalid read of size 4 in get_VM_C() function in the package. The error is shown below:
 
 ```c++
 ==10904== Invalid read of size 8
@@ -130,7 +129,7 @@ The next error trace line showing `Address 0xba09720 is 0 bytes after a block of
 
 
 
-3. **accelerometry** : RcppDeepState found errors in blockaves_i_max(), blockaves_n_max(), blocksums_i_max(), blocksums_n_max(), sedbreaks_flags(), sedbreaks(). The [error log](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/accelerometry) has the log trace for all these functions.
+**accelerometry** : RcppDeepState found errors in blockaves_i_max(), blockaves_n_max(), blocksums_i_max(), blocksums_n_max(), sedbreaks_flags(), sedbreaks(). The [error log](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/accelerometry) has the log trace for all these functions.
 
 Most of the functions have an Invalid read error reported. Whereas the sedbreaks_flags() function has a Conditional jump or move depends on the uninitialized value(s) along with the Invalid read.
 
@@ -178,8 +177,7 @@ Most of the functions have an Invalid read error reported. Whereas the sedbreaks
 ```
 
 We have already discussed the invalid read and conditional jump above. Here `Uninitialised value was created by a heap allocation` means that the process is trying to access a heap location whose values are uninitialized and it traces back to line 38 in the function sedbreaks().
-
-4. **ambient** : RcppDeepState detected issues in 27 functions in the package ambient. Most of the functions have Invalid read and Conditional jump on uninitialized values. The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/ambient) has the log traces for all the functions.
+**ambient** : RcppDeepState detected issues in 27 functions in the package ambient. Most of the functions have Invalid read and Conditional jump on uninitialized values. The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/ambient) has the log xtraces for all the functions.
 
 For example consider gen_value3d_c() function which revealed the following issues:
 
@@ -227,7 +225,7 @@ For example consider gen_value3d_c() function which revealed the following issue
 
 As we see the Valgrind traces show that the program execution has been changed due to the use of uninitialized values. The last trace `Use of an uninitialized value of size 8` shows that the size of the memory(8 bytes) the system tried to access and failed.
 
-5. **BAMBI** : RcppDeepState detected issues in 21 functions in the package BAMBI.The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/BAMBI) has the logtraces for all the functions. Most of the errors detected show a `Conditional jump or move depends on uninitialised value(s)`
+**BAMBI** : RcppDeepState detected issues in 21 functions in the package BAMBI.The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/BAMBI) has the logtraces for all the functions. Most of the errors detected show a `Conditional jump or move depends on uninitialised value(s)`
 
 For function vmsin_all() has the following error detected:
 
