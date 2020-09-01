@@ -10,7 +10,7 @@ math: true
 
 **Background**
 
-	Testing a software application is always a tough job and time-consuming. To successfully identify bugs in your package we need to consider the following:
+Testing a software application is always a tough job and time-consuming. To successfully identify bugs in your package we need to consider the following:
 
 1. Randomized Inputs.
 2. Code Coverage
@@ -25,14 +25,13 @@ As a part of the RcppDeepState, We are testing the Rcpp packages with the help o
 
 ### CRAN checks on Rcpp Packages
 
-As discussed earlier RcppDeepState uses a combination of deepstate and Valgrind to reveal the subtle bugs in the code.DeepState is for generating the learned inputs and valgrind to test the code using those inputs. An interesting thing about RcppDeepState is that it's able to detect the bugs in few Rcpp packages where CRAN failed to detect. 
+As discussed earlier RcppDeepState uses a combination of deepstate and Valgrind to reveal the subtle bugs in the code.DeepState is for generating the learned inputs and Valgrind to test the code using those inputs. An interesting thing about RcppDeepState is that it's able to detect the bugs in few Rcpp packages where CRAN failed to detect. 
 
 CRAN tests its packages against the different kinds of checks. Those check include valgrind,clang-ASAN,clang-UBSAN,gcc-ASAN,gcc-UBSAN,clang11,gcc10,noLD,ATLAS,MKL,OpenBLAS,LTO,noOMP,donttest,rchk,rcnst. The [CRAN check](https://cran.r-project.org/web/checks/check_issue_kinds.html) page provides more detailed explaination of these tools.
 
-Issues in the packages are mostly identified by Address sanitizers, undefined behaviour sanitizer and Valgrind. The below data table list the most frequent tools and count of packages that tools identified the errors in: 
+Issues in the packages are mostly identified by Address sanitizers, undefined behavior sanitizer, and Valgrind. The below data table lists the most frequent tools and count of packages that tools identified the errors in: 
 
 ```R
-
 > type.dt[, .(pkgs=.N), by=type][order(pkgs)]
           type pkgs
 1:  clang-ASAN    1
@@ -43,10 +42,9 @@ Issues in the packages are mostly identified by Address sanitizers, undefined be
 
 ```
 
-We downloaded CRAN check pages for all the Rcpp packages and tried to identify the packages with bugs in them. The [CRAN list](https://github.com/akhikolla/RcppDeepState/blob/master/R/crancheck.R) has the code to list the packages that has bugs identified by CRAN tools.
+We downloaded CRAN check pages for all the Rcpp packages and tried to identify the packages with bugs in them. The [CRAN list](https://github.com/akhikolla/RcppDeepState/blob/master/R/crancheck.R) has the code to list the packages that have bugs identified by CRAN tools.
 
 ```R
-
 > unique(type.dt$pkg)
  [1] "AGread"              "bigmemory"           "BuyseTest" 
  [4] "cld2"                "cld3"                "compboost"
@@ -68,7 +66,7 @@ We downloaded CRAN check pages for all the Rcpp packages and tried to identify t
 
 ### RcppDeepState checks on Rcpp Packages
 
-RcppDeepState detected bugs in few Rcpp packages which CRAN failed to detect. The [RcppDeepState list](https://github.com/akhikolla/RcppDeepState/blob/master/R/logidentify.R) gives the list of packages that RcppDeepState detects the errors in.
+RcppDeepState detected bugs in few Rcpp packages which CRAN failed to detect. The [RcppDeepState list](https://github.com/akhikolla/RcppDeepState/blob/master/R/logidentify.R) gives the list of packages that RcppDeepState detects the errors using Limited fuzz testing.
 
 Found errors in following packages(so far) using RcppDeepState
 
@@ -81,9 +79,26 @@ Found errors in following packages(so far) using RcppDeepState
 
 ```
 
-The [Complete log files]() has the error log files which list the input along with the error trace for the functions in the packages.
+The [Complete log files](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs) has the error log files which list the input along with the error trace for the functions in the packages.
 
-1. **AGread** : RcppDeepState detected an Invalid read of size 4 in get_VM_C() function in the package. The error is shown below:
+1. **adeba** : RcppDeepState detected a Conditional jump or move depends on uninitialised value in get_bandwidths() in adeba.cpp
+
+```c++
+==10696== Conditional jump or move depends on uninitialised value(s)
+==10696==    at 0x5AFA396: __ieee754_pow_fma (e_pow.c:90)
+==10696==    by 0x5A80B13: pow (w_pow_compat.c:30)
+==10696==    by 0x41FA9F: get_bandwidths(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>) (adeba.cpp:55)
+==10696==    by 0x408BA0: DeepState_Test_adeba_deepstate_test_get_bandwidths_test() (get_bandwidths_DeepState_TestHarness.cpp:28)
+==10696==    by 0x408858: DeepState_Run_adeba_deepstate_test_get_bandwidths_test() (get_bandwidths_DeepState_TestHarness.cpp:7)
+==10696==    by 0x406103: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/adeba/inst/testfiles/get_bandwidths/get_bandwidths_DeepState_TestHarness)
+==10696==    by 0x4138FA: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/adeba/inst/testfiles/get_bandwidths/get_bandwidths_DeepState_TestHarness)
+==10696==    by 0x413A0F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/adeba/inst/testfiles/get_bandwidths/get_bandwidths_DeepState_TestHarness)
+==10696==    by 0x406C4D: main (in /home/akhila/Documents/compileAttributescheck/adeba/inst/testfiles/get_bandwidths/get_bandwidths_DeepState_TestHarness)
+```
+Here the `Conditional jump or move depends on the uninitialized value(s)` means that the execution of the program is altered due to the uninitialized value and Valgrind provides the trace to track the origin of the uninitialized values.
+
+
+2. **AGread** : RcppDeepState detected an Invalid read of size 4 in get_VM_C() function in the package. The error is shown below:
 
 ```c++
 ==10904== Invalid read of size 8
@@ -112,6 +127,139 @@ The [Complete log files]() has the error log files which list the input along wi
 Here the `Invalid read of size 8` means the memory that the process is trying to read is unavailable. Here the 8 bytes indicate the size of the memory that the process is trying to access.
 
 The next error trace line showing `Address 0xba09720 is 0 bytes after a block of size 624 alloc'd` means that the address starting at the location 0xba09720, 0 bytes are allocated for a block of size 624 bytes.
+
+
+
+3. **accelerometry** : RcppDeepState found errors in blockaves_i_max(), blockaves_n_max(), blocksums_i_max(), blocksums_n_max(), sedbreaks_flags(), sedbreaks(). The [error log](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/accelerometry) has the log trace for all these functions.
+
+Most of the functions have an Invalid read error reported. Whereas the sedbreaks_flags() function has a Conditional jump or move depends on the uninitialized value(s) along with the Invalid read.
+
+```c++
+==10412== Invalid read of size 4
+==10412==    at 0x4303D5: sedbreaks_flags(Rcpp::Vector<13, Rcpp::PreserveStorage>, Rcpp::Vector<13, Rcpp::PreserveStorage>, int) (sedbreaks_c.cpp:35)
+==10412==    by 0x409B50: DeepState_Test_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:28)
+==10412==    by 0x409818: DeepState_Run_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:7)
+==10412==    by 0x406303: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41484A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41495F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x406E4D: main (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==  Address 0xb964b48 is 0 bytes after a block of size 280 alloc'd
+==10412==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==10412==    by 0x4FB8633: Rf_allocVector3 (memory.c:2766)
+==10412==    by 0x40CBDD: Rcpp::Vector<13, Rcpp::PreserveStorage>::Vector(int const&) (Vector.h:130)
+==10412==    by 0x408B54: RcppDeepState_IntegerVector() (RcppDeepState.h:52)
+==10412==    by 0x409957: DeepState_Test_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:17)
+==10412==    by 0x409818: DeepState_Run_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:7)
+==10412==    by 0x406303: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41484A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41495F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x406E4D: main (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412== 
+==10412== Conditional jump or move depends on uninitialised value(s)
+==10412==    at 0x430421: sedbreaks_flags(Rcpp::Vector<13, Rcpp::PreserveStorage>, Rcpp::Vector<13, Rcpp::PreserveStorage>, int) (sedbreaks_c.cpp:38)
+==10412==    by 0x409B50: DeepState_Test_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:28)
+==10412==    by 0x409818: DeepState_Run_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:7)
+==10412==    by 0x406303: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41484A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41495F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x406E4D: main (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==  Uninitialised value was created by a heap allocation
+==10412==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==10412==    by 0x4FB8633: Rf_allocVector3 (memory.c:2766)
+==10412==    by 0x40CBDD: Rcpp::Vector<13, Rcpp::PreserveStorage>::Vector(int const&) (Vector.h:130)
+==10412==    by 0x408B54: RcppDeepState_IntegerVector() (RcppDeepState.h:52)
+==10412==    by 0x409957: DeepState_Test_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:17)
+==10412==    by 0x409818: DeepState_Run_accelerometry_deepstate_test_sedbreaks_flags_test() (sedbreaks_flags_DeepState_TestHarness.cpp:7)
+==10412==    by 0x406303: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41484A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x41495F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+==10412==    by 0x406E4D: main (in /home/akhila/Documents/compileAttributescheck/accelerometry/inst/testfiles/sedbreaks_flags/sedbreaks_flags_DeepState_TestHarness)
+
+```
+
+We have already discussed the invalid read and conditional jump above. Here `Uninitialised value was created by a heap allocation` means that the process is trying to access a heap location whose values are uninitialized and it traces back to line 38 in the function sedbreaks().
+
+4. **ambient** : RcppDeepState detected issues in 27 functions in the package ambient. Most of the functions have Invalid read and Conditional jump on uninitialized values. The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/ambient) has the log traces for all the functions.
+
+For example consider gen_value3d_c() function which revealed the following issues:
+
+```c++
+==13686== Conditional jump or move depends on uninitialised value(s)
+==13686==    at 0x41E075: FastFloor(double) (FastNoise.cpp:184)
+==13686==    by 0x417CB5: FastNoise::SingleValue(unsigned char, double, double, double) const (FastNoise.cpp:639)
+==13686==    by 0x41E04C: FastNoise::GetValue(double, double, double) const (FastNoise.cpp:633)
+==13686==    by 0x43C271: gen_value3d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int, int) (value.cpp:97)
+==13686==    by 0x40948E: DeepState_Test_ambient_deepstate_test_gen_value3d_c_test() (gen_value3d_c_DeepState_TestHarness.cpp:47)
+==13686==    by 0x408E18: DeepState_Run_ambient_deepstate_test_gen_value3d_c_test() (gen_value3d_c_DeepState_TestHarness.cpp:7)
+==13686==    by 0x405F13: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x41426A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x41437F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x406A5D: main (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==  Uninitialised value was created by a heap allocation
+==13686==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==13686==    by 0x4FB6FEC: GetNewPage (memory.c:924)
+==13686==    by 0x4FB86FA: Rf_allocVector3 (memory.c:2745)
+==13686==    by 0x4F587D2: Rf_allocVector (Rinlinedfuns.h:580)
+==13686==    by 0x4F587D2: mkHandlerEntry (errors.c:1565)
+==13686==    by 0x4F5D1D4: do_addCondHands (errors.c:1644)
+==13686==    by 0x4F6FC50: bcEval (eval.c:6765)
+==13686==    by 0x4F7C9FF: Rf_eval (eval.c:620)
+==13686==    by 0x4F7E85E: R_execClosure (eval.c:1780)
+==13686==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
+==13686==    by 0x4F735A1: bcEval (eval.c:6733)
+==13686==    by 0x4F7C9FF: Rf_eval (eval.c:620)
+==13686==    by 0x4F7E85E: R_execClosure (eval.c:1780)
+==13686== 
+==13686== Use of uninitialised value of size 8
+==13686==    at 0x422AEC: FastNoise::Index3D_256(unsigned char, int, int, int) const (FastNoise.cpp:275)
+==13686==    by 0x422854: FastNoise::ValCoord3DFast(unsigned char, int, int, int) const (FastNoise.cpp:322)
+==13686==    by 0x417E4D: FastNoise::SingleValue(unsigned char, double, double, double) const (FastNoise.cpp:665)
+==13686==    by 0x41E04C: FastNoise::GetValue(double, double, double) const (FastNoise.cpp:633)
+==13686==    by 0x43C271: gen_value3d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int, int) (value.cpp:97)
+==13686==    by 0x40948E: DeepState_Test_ambient_deepstate_test_gen_value3d_c_test() (gen_value3d_c_DeepState_TestHarness.cpp:47)
+==13686==    by 0x408E18: DeepState_Run_ambient_deepstate_test_gen_value3d_c_test() (gen_value3d_c_DeepState_TestHarness.cpp:7)
+==13686==    by 0x405F13: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x41426A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x41437F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+==13686==    by 0x406A5D: main (in /home/akhila/Documents/compileAttributescheck/ambient/inst/testfiles/gen_value3d_c/gen_value3d_c_DeepState_TestHarness)
+
+```
+
+As we see the Valgrind traces show that the program execution has been changed due to the use of uninitialized values. The last trace `Use of an uninitialized value of size 8` shows that the size of the memory(8 bytes) the system tried to access and failed.
+
+5. **BAMBI** : RcppDeepState detected issues in 21 functions in the package BAMBI.The [error logs](https://github.com/akhikolla/RcppDeepStateTest/tree/master/errorlogs/BAMBI) has the logtraces for all the functions. Most of the errors detected show a `Conditional jump or move depends on uninitialised value(s)`
+
+For function vmsin_all() has the following error detected:
+
+```c++
+==13017== Conditional jump or move depends on uninitialised value(s)
+==13017==    at 0x40ED38: arma::Mat<double>::~Mat() (Mat_meat.hpp:27)
+==13017==    by 0x40F344: arma::Col<double>::~Col() (arma_forward.hpp:27)
+==13017==    by 0x40B9F9: DeepState_Test_BAMBI_deepstate_test_log_const_vmcos_all_test() (log_const_vmcos_all_DeepState_TestHarness.cpp:23)
+==13017==    by 0x40B768: DeepState_Run_BAMBI_deepstate_test_log_const_vmcos_all_test() (log_const_vmcos_all_DeepState_TestHarness.cpp:7)
+==13017==    by 0x406673: DeepState_RunTest.isra.6 (in /home/akhila/Documents/compileAttributescheck/BAMBI/inst/testfiles/log_const_vmcos_all/log_const_vmcos_all_DeepState_TestHarness)
+==13017==    by 0x41764A: DeepState_FuzzOneTestCase (in /home/akhila/Documents/compileAttributescheck/BAMBI/inst/testfiles/log_const_vmcos_all/log_const_vmcos_all_DeepState_TestHarness)
+==13017==    by 0x41775F: DeepState_Fuzz (in /home/akhila/Documents/compileAttributescheck/BAMBI/inst/testfiles/log_const_vmcos_all/log_const_vmcos_all_DeepState_TestHarness)
+==13017==    by 0x4071BD: main (in /home/akhila/Documents/compileAttributescheck/BAMBI/inst/testfiles/log_const_vmcos_all/log_const_vmcos_all_DeepState_TestHarness)
+==13017==  Uninitialised value was created by a stack allocation
+==13017==    at 0x40B782: DeepState_Test_BAMBI_deepstate_test_log_const_vmcos_all_test() (log_const_vmcos_all_DeepState_TestHarness.cpp:8)
+
+```
+
+The error `Uninitialised value was created by a stack allocation` means that the process is trying to use a variable before assigning it.
+Stack memory is where the local variables and the function calls are stored.
+
+Other packages show similar errors (conditional jump, Invalid read, Invalid write) when tested using RcppDeepState. We have tested almost 111 packages, 268 functions so far.
+
+Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
+
+
+
+
+
+ 
+
+
 
 
 
