@@ -1,4 +1,4 @@
-I"z
+I"�
 <div id="tags" class="d-flex flex-wrap ml-xl-2 mr-xl-2">
 
 
@@ -8,6 +8,10 @@
 
   <div>
     <a class="tag" href="/tags/fuzztesting/">FuzzTesting<span class="text-muted">1</span></a>
+  </div>
+
+  <div>
+    <a class="tag" href="/tags/r/">R<span class="text-muted">2</span></a>
   </div>
 
   <div>
@@ -23,7 +27,7 @@
   </div>
 
   <div>
-    <a class="tag" href="/tags/%E2%80%9Cr%E2%80%9D/">“R”<span class="text-muted">4</span></a>
+    <a class="tag" href="/tags/%E2%80%9Cr%E2%80%9D/">“R”<span class="text-muted">2</span></a>
   </div>
 
 

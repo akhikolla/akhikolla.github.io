@@ -2,7 +2,7 @@
 title: Testing Rcpp packages
 author: Akhila Chowdary Kolla
 categories: [Testing, Memory checks]
-tags: [Testings,“R”]
+tags: [Testings,R]
 math: true
 ---
 

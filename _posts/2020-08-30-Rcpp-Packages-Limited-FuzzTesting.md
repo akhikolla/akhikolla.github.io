@@ -2,7 +2,7 @@
 title: Rcpp Packages Limited Fuzz Testing
 author: Akhila Chowdary Kolla
 categories: [Testing, Memory checks]
-tags: [FuzzTesting,“R”]
+tags: [FuzzTesting,R]
 math: true
 ---
 

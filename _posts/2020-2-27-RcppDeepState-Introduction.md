@@ -2,7 +2,7 @@
 layout: post
 title: "RcppDeepState"
 category: [Introduction,Way to Fuzz Test packages]
-tags: [RcppDeepState,“R”]
+tags: [RcppDeepState,R]
 --- 
 This Blog gives you an understanding of Fuzzing, why it is important and what are the things that you should have prior knowledge about, before starting on DeepState and it’s usage on Rcpp packages. DeepState helps you use both Fuzzers and Symbolic executors to generate random inputs in the backend.
 <hr/>

@@ -2,7 +2,7 @@
 title: Automating the TestHarness
 author: Akhila Chowdary Kolla
 categories: [RcppDeepState,Automate Test Harness]
-tags: [TestHarness,“R”]
+tags: [TestHarness,R]
 math: true
 ---
 
