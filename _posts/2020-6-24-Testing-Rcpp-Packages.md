@@ -351,3 +351,4 @@ I have used deepstate_ci_setup() to set up package LOPART for testing with RcppD
 Once the changes are pushed to the user's GitHub Travis build runs and executes the functions. If all the tests pass in the Travis build your package doesn't have any crashes/bugs. The recent Travis build of [LOPART](https://travis-ci.org/github/akhikolla/LOPART/builds/704049717)
 
 Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
+This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 

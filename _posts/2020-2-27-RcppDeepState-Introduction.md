@@ -296,5 +296,5 @@ The code for DeepState Test harness for Integer and Numeric vector in binseg pac
 [RcppDeepState](https://github.com/akhikolla/RcppDeepState)
 and test harness can be found in [Testharness](https://github.com/akhikolla/RcppDeepState/blob/master/src/TestRcppharness.cpp)
 
-Thanks to `Dr.Toby Dylan Hocking` for his support.
+Thanks to `Dr.Toby Dylan Hocking` for his support.This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 <hr/>

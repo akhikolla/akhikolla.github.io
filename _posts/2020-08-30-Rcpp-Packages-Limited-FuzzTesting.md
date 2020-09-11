@@ -247,7 +247,7 @@ Stack memory is where the local variables and the function calls are stored.
 Other packages show similar errors (conditional jump, Invalid read, Invalid write) when tested using RcppDeepState. We have tested almost 111 packages, 268 functions so far.
 
 Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
-
+This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
 
 
