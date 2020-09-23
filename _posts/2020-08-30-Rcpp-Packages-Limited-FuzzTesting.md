@@ -246,6 +246,91 @@ Stack memory is where the local variables and the function calls are stored.
 
 Other packages show similar errors (conditional jump, Invalid read, Invalid write) when tested using RcppDeepState. We have tested almost 111 packages, 268 functions so far.
 
+We performed a Valgrind test on the BalancedSampling::cubestratified() with reasonable inputs from the man page of the respective packages.
+
+```c++
+akolla@snaps-computer:~$ R --vanilla -d valgrind -e "BalancedSampling::cubestratified(rep(5/10,10),cbind(rep(5/10,10)),c(1,1,2,2,3,3,4,4,5,5))"
+==1116252== Memcheck, a memory error detector
+==1116252== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==1116252== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==1116252== Command: /usr/lib/R/bin/exec/R --vanilla -e BalancedSampling::cubestratified(rep(5/10,10),cbind(rep(5/10,10)),c(1,1,2,2,3,3,4,4,5,5))
+==1116252== 
+
+> BalancedSampling::cubestratified(rep(5/10,10),cbind(rep(5/10,10)),c(1,1,2,2,3,3,4,4,5,5))
+ [1] 0 1 1 0 0 1 1 0 0 1
+==1116252== 
+==1116252== HEAP SUMMARY:
+==1116252==     in use at exit: 50,674,475 bytes in 10,078 blocks
+==1116252==   total heap usage: 28,151 allocs, 18,073 frees, 86,670,876 bytes allocated
+==1116252== 
+==1116252== LEAK SUMMARY:
+==1116252==    definitely lost: 0 bytes in 0 blocks
+==1116252==    indirectly lost: 0 bytes in 0 blocks
+==1116252==      possibly lost: 0 bytes in 0 blocks
+==1116252==    still reachable: 50,674,475 bytes in 10,078 blocks
+==1116252==                       of which reachable via heuristic:
+==1116252==                         newarray           : 4,264 bytes in 1 blocks
+==1116252==         suppressed: 0 bytes in 0 blocks
+==1116252== Rerun with --leak-check=full to see details of leaked memory
+==1116252== 
+==1116252== For lists of detected and suppressed errors, rerun with: -s
+==1116252== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+
+The test shows no errors in the package for those reasonable inputs but when the package is run under RcppDeepState fuzz it detects the following error in the same function.
+
+```c++
+==6688== Memcheck, a memory error detector
+==6688== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==6688== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==6688== Command: ./cubestratified_DeepState_TestHarness --fuzz --fuzz_save_passing --output_test_dir /home/akhila/Documents/compileAttributescheck/BalancedSampling/inst/testfiles/cubestratified/cubestratified_output
+==6688== 
+==6688== Invalid read of size 8
+==6688==    at 0x4FBB8FD: Rf_install (names.c:1230)
+==6688==    by 0x42FB9F: Rcpp::Function_Impl<Rcpp::PreserveStorage>::get_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, SEXPREC*) (Function.h:110)
+==6688==    by 0x42ECD3: Rcpp::Function_Impl<Rcpp::PreserveStorage>::Function_Impl(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (Function.h:62)
+==6688==    by 0x4076C0: __cxx_global_var_init.4 (cube.cpp:11)
+==6688==    by 0x40775C: _GLOBAL__sub_I_cube.cpp (cube.cpp:0)
+==6688==    by 0x43792C: __libc_csu_init (in /home/akhila/Documents/compileAttributescheck/BalancedSampling/inst/testfiles/cubestratified/cubestratified_DeepState_TestHarness)
+==6688==    by 0x6049B27: (below main) (libc-start.c:266)
+==6688==  Address 0x269c8 is not stack'd, malloc'd or (recently) free'd
+==6688== 
+==6688== 
+==6688== Process terminating with default action of signal 11 (SIGSEGV)
+==6688==  Access not within mapped region at address 0x269C8
+==6688==    at 0x4FBB8FD: Rf_install (names.c:1230)
+==6688==    by 0x42FB9F: Rcpp::Function_Impl<Rcpp::PreserveStorage>::get_function(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, SEXPREC*) (Function.h:110)
+==6688==    by 0x42ECD3: Rcpp::Function_Impl<Rcpp::PreserveStorage>::Function_Impl(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (Function.h:62)
+==6688==    by 0x4076C0: __cxx_global_var_init.4 (cube.cpp:11)
+==6688==    by 0x40775C: _GLOBAL__sub_I_cube.cpp (cube.cpp:0)
+==6688==    by 0x43792C: __libc_csu_init (in /home/akhila/Documents/compileAttributescheck/BalancedSampling/inst/testfiles/cubestratified/cubestratified_DeepState_TestHarness)
+==6688==    by 0x6049B27: (below main) (libc-start.c:266)
+==6688==  If you believe this happened as a result of a stack
+==6688==  overflow in your program's main thread (unlikely but
+==6688==  possible), you can try to increase the size of the
+==6688==  main thread stack using the --main-stacksize= flag.
+==6688==  The main thread stack size used in this run was 8388608.
+==6688== 
+==6688== HEAP SUMMARY:
+==6688==     in use at exit: 1,048 bytes in 2 blocks
+==6688==   total heap usage: 4 allocs, 2 frees, 106,568 bytes allocated
+==6688== 
+==6688== LEAK SUMMARY:
+==6688==    definitely lost: 0 bytes in 0 blocks
+==6688==    indirectly lost: 0 bytes in 0 blocks
+==6688==      possibly lost: 0 bytes in 0 blocks
+==6688==    still reachable: 1,048 bytes in 2 blocks
+==6688==         suppressed: 0 bytes in 0 blocks
+==6688== Reachable blocks (those to which a pointer was found) are not shown.
+==6688== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==6688== 
+==6688== For counts of detected and suppressed errors, rerun with: -v
+==6688== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+Segmentation fault (core dumped)
+
+```
+
+
 Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
 This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
