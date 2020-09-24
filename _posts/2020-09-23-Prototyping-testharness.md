@@ -192,7 +192,7 @@ When we add the below code to ambient-test.R and run it with valgrind we can see
 ==6224==    by 0x4F08C0C: do_docall (coerce.c:2704)
 ==6224==    by 0x4F79765: bcEval (eval.c:7099)
 ==6224==    by 0x4F85D4F: Rf_eval (eval.c:723)
-==6224==  Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc'd
+==6224==  Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc`d
 ==6224==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
 ==6224==    by 0x4FC4B02: GetNewPage (memory.c:946)
 ==6224==    by 0x4FC6B41: Rf_allocVector3 (memory.c:2784)
@@ -232,19 +232,6 @@ When we add the below code to ambient-test.R and run it with valgrind we can see
 ==6224== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 75 from 1)
 
 ```
-The Valgrind trace in short shows the following errors:
-
-```R
-> library(RcppDeepState)
-> RcppDeepState::deepstate_logtest("/home/akhila/R/packages/ambient/inst/testfiles/gen_cubic2d_c/gen_cubic2d_c_output/log_9d161c6d257a3a7d8792ee6bd627aaf470a8c05f/valgrind_log")
-[[1]]
-           kind                     msg     errortrace
-1: InvalidRead    Invalid read of size 8 src/cubic.cpp:85
-                                                        address             trace
-1: Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc'd    NA
-
-```
-
 We see that an InvalidRead error is reported in the program. This happens when the process tries to access the memory location that is outside of the available memory locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
 
