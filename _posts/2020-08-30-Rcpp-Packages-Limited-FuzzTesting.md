@@ -25,7 +25,7 @@ As a part of the RcppDeepState, We are testing the Rcpp packages with the help o
 
 As discussed earlier RcppDeepState uses a combination of deepstate and Valgrind to reveal the subtle bugs in the code.DeepState is for generating the learned inputs and Valgrind to test the code using those inputs. An interesting thing about RcppDeepState is that it's able to detect the bugs in few Rcpp packages where CRAN failed to detect. 
 
-CRAN tests its packages against the different kinds of checks. Those check include valgrind,clang-ASAN,clang-UBSAN,gcc-ASAN,gcc-UBSAN,clang11,gcc10,noLD,ATLAS,MKL,OpenBLAS,LTO,noOMP,donttest,rchk,rcnst. The [CRAN check](https://cran.r-project.org/web/checks/check_issue_kinds.html) page provides more detailed explaination of these tools.
+CRAN tests its packages against the different kinds of checks. Those check include valgrind, clang-ASAN, clang-UBSAN, gcc-ASAN, gcc-UBSAN, clang11, gcc10, noLD, ATLAS, MKL, OpenBLAS, LTO, noOMP, donttest, rchk, rcnst. The [CRAN check](https://cran.r-project.org/web/checks/check_issue_kinds.html) page provides more detailed explaination of these tools.
 
 Issues in the packages are mostly identified by Address sanitizers, undefined behavior sanitizer, and Valgrind. The below data table lists the most frequent tools and count of packages that tools identified the errors in: 
 
