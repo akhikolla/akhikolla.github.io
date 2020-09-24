@@ -312,7 +312,7 @@ When we add the below code to ambient-test.R and run it with valgrind we can see
 ==6879== ERROR SUMMARY: 7 errors from 7 contexts (suppressed: 0 from 0)
 
 ```
-The Valgrind trace in short shows the following errors:
+The valgrind trace in short shows the following errors:
 
 ```R
 > library(RcppDeepState)
