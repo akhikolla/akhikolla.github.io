@@ -330,7 +330,6 @@ Segmentation fault (core dumped)
 
 ```
 
-
 Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
 This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
