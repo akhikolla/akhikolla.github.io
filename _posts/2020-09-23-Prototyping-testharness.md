@@ -42,7 +42,6 @@ gen_cubic <- function(x, y = NULL, z = NULL, frequency = 1, seed = NULL, ...) {
     gen_cubic3d_c(dims$x, dims$y, dims$z, frequency, seed)
   }
 }
-
 ```
 From this, we can understand that a call to `gen_cubic` is to be made to invoke `gen_cubic2d_c`. There is documentation available for the function gen_cubic in man/noise_cubic.R.
 
@@ -180,136 +179,57 @@ When we add the below code to ambient-test.R and run it with valgrind we can see
 **Output**
 
 ```shell
-==6879== Conditional jump or move depends on uninitialised value(s)
-==6879==    at 0x1088DC49: FastFloor (FastNoise.cpp:184)
-==6879==    by 0x1088DC49: FastNoise::SingleCubic(unsigned char, double, double) const (FastNoise.cpp:1827)
-==6879==    by 0x1089F682: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
-==6879==    by 0x1089230A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
-==6879==    by 0x4F35BB5: do_dotcall (dotcode.c:1252)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4F7CBC9: Rf_eval (eval.c:743)
-==6879==    by 0x4F047AC: do_docall (coerce.c:2638)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
-==6879== Use of uninitialised value of size 8
-==6879==    at 0x1088DC82: Index2D_256 (FastNoise.cpp:271)
-==6879==    by 0x1088DC82: ValCoord2DFast (FastNoise.cpp:318)
-==6879==    by 0x1088DC82: FastNoise::SingleCubic(unsigned char, double, double) const (FastNoise.cpp:1839)
-==6879==    by 0x1089F682: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
-==6879==    by 0x1089230A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
-==6879==    by 0x4F35BB5: do_dotcall (dotcode.c:1252)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4F7CBC9: Rf_eval (eval.c:743)
-==6879==    by 0x4F047AC: do_docall (coerce.c:2638)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
-==6879== Use of uninitialised value of size 8
-==6879==    at 0x1088DD17: Index2D_256 (FastNoise.cpp:271)
-==6879==    by 0x1088DD17: ValCoord2DFast (FastNoise.cpp:318)
-==6879==    by 0x1088DD17: FastNoise::SingleCubic(unsigned char, double, double) const (FastNoise.cpp:1839)
-==6879==    by 0x1089F682: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
-==6879==    by 0x1089230A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
-==6879==    by 0x4F35BB5: do_dotcall (dotcode.c:1252)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4F7CBC9: Rf_eval (eval.c:743)
-==6879==    by 0x4F047AC: do_docall (coerce.c:2638)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
-==6879== Use of uninitialised value of size 8
-==6879==    at 0x1088DD1B: Index2D_256 (FastNoise.cpp:271)
-==6879==    by 0x1088DD1B: ValCoord2DFast (FastNoise.cpp:318)
-==6879==    by 0x1088DD1B: FastNoise::SingleCubic(unsigned char, double, double) const (FastNoise.cpp:1839)
-==6879==    by 0x1089F682: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
-==6879==    by 0x1089230A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
-==6879==    by 0x4F35BB5: do_dotcall (dotcode.c:1252)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4F7CBC9: Rf_eval (eval.c:743)
-==6879==    by 0x4F047AC: do_docall (coerce.c:2638)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
-==6879== Use of uninitialised value of size 8
-==6879==    at 0x1088DDF0: Index2D_256 (FastNoise.cpp:271)
-==6879==    by 0x1088DDF0: ValCoord2DFast (FastNoise.cpp:318)
-==6879==    by 0x1088DDF0: FastNoise::SingleCubic(unsigned char, double, double) const (FastNoise.cpp:1839)
-==6879==    by 0x1089F682: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
-==6879==    by 0x1089230A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
-==6879==    by 0x4F35BB5: do_dotcall (dotcode.c:1252)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4F7CBC9: Rf_eval (eval.c:743)
-==6879==    by 0x4F047AC: do_docall (coerce.c:2638)
-==6879==    by 0x4F6FC50: bcEval (eval.c:6765)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
+==6224== Invalid read of size 8
+==6224==    at 0x112E6679: gen_cubic2d_c(Rcpp::Vector<14, Rcpp::PreserveStorage>, Rcpp::Vector<14, Rcpp::PreserveStorage>, double, int) (cubic.cpp:85)
+==6224==    by 0x112D930A: _ambient_gen_cubic2d_c (RcppExports.cpp:59)
+==6224==    by 0x4F3B953: R_doDotCall (dotcode.c:607)
+==6224==    by 0x4F3BE85: do_dotcall (dotcode.c:1280)
+==6224==    by 0x4F79765: bcEval (eval.c:7099)
+==6224==    by 0x4F85D4F: Rf_eval (eval.c:723)
+==6224==    by 0x4F87B6E: R_execClosure (eval.c:1888)
+==6224==    by 0x4F88936: Rf_applyClosure (eval.c:1814)
+==6224==    by 0x4F85F22: Rf_eval (eval.c:846)
+==6224==    by 0x4F08C0C: do_docall (coerce.c:2704)
+==6224==    by 0x4F79765: bcEval (eval.c:7099)
+==6224==    by 0x4F85D4F: Rf_eval (eval.c:723)
+==6224==  Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc'd
+==6224==    at 0x4C2FB0F: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==6224==    by 0x4FC4B02: GetNewPage (memory.c:946)
+==6224==    by 0x4FC6B41: Rf_allocVector3 (memory.c:2784)
+==6224==    by 0x5027381: Rf_allocVector (Rinlinedfuns.h:593)
+==6224==    by 0x5027381: ReadItem (serialize.c:1932)
+==6224==    by 0x502852F: ReadBCConsts (serialize.c:2101)
+==6224==    by 0x502852F: ReadBC1 (serialize.c:2118)
+==6224==    by 0x50277EC: ReadBC (serialize.c:2129)
+==6224==    by 0x50277EC: ReadItem (serialize.c:1966)
+==6224==    by 0x5026B39: ReadItem (serialize.c:1873)
+==6224==    by 0x5027596: ReadItem (serialize.c:1961)
+==6224==    by 0x50288BD: R_Unserialize (serialize.c:2181)
+==6224==    by 0x5029C59: R_unserialize (serialize.c:2892)
+==6224==    by 0x502A090: do_lazyLoadDBfetch (serialize.c:3196)
+==6224==    by 0x4F862D5: Rf_eval (eval.c:830)
+==6224== 
 > str(deepstate.result)
-==6879== Conditional jump or move depends on uninitialised value(s)
-==6879==    at 0x4FA9760: lunary (logic.c:212)
-==6879==    by 0x4FA9760: do_logic (logic.c:60)
-==6879==    by 0x4F6E78E: bcEval (eval.c:6837)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4FBD622: dispatchMethod.isra.5 (objects.c:436)
-==6879==    by 0x4FBDA5F: Rf_usemethod (objects.c:486)
-==6879==    by 0x4FBDE21: do_usemethod (objects.c:565)
-==6879==    by 0x4F70B71: bcEval (eval.c:6785)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879== 
-==6879== Conditional jump or move depends on uninitialised value(s)
-==6879==    at 0x5030BC6: logicalSubscript (subscript.c:577)
-==6879==    by 0x5033C93: Rf_makeSubscript (subscript.c:1000)
-==6879==    by 0x5036F13: VectorSubset (subset.c:193)
-==6879==    by 0x5036F13: do_subset_dflt (subset.c:823)
-==6879==    by 0x4F6C511: VECSUBSET_PTR (eval.c:5433)
-==6879==    by 0x4F6C511: bcEval (eval.c:6973)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879==    by 0x4F7E85E: R_execClosure (eval.c:1780)
-==6879==    by 0x4F7F5A2: Rf_applyClosure (eval.c:1706)
-==6879==    by 0x4FBD622: dispatchMethod.isra.5 (objects.c:436)
-==6879==    by 0x4FBDA5F: Rf_usemethod (objects.c:486)
-==6879==    by 0x4FBDE21: do_usemethod (objects.c:565)
-==6879==    by 0x4F70B71: bcEval (eval.c:6785)
-==6879==    by 0x4F7C9FF: Rf_eval (eval.c:620)
-==6879== 
- num [1:9] NaN NaN NaN NaN NaN ... 
-==6879== 
-==6879== HEAP SUMMARY:
-==6879==     in use at exit: 76,559,975 bytes in 10,724 blocks
-==6879==   total heap usage: 30,647 allocs, 19,923 frees, 115,945,040 bytes allocated
-==6879== 
-==6879== LEAK SUMMARY:
-==6879==    definitely lost: 0 bytes in 0 blocks
-==6879==    indirectly lost: 0 bytes in 0 blocks
-==6879==      possibly lost: 0 bytes in 0 blocks
-==6879==    still reachable: 76,559,975 bytes in 10,724 blocks
-==6879==                       of which reachable via heuristic:
-==6879==                         newarray           : 4,264 bytes in 1 blocks
-==6879==         suppressed: 0 bytes in 0 blocks
-==6879== Rerun with --leak-check=full to see details of leaked memory
-==6879== 
-==6879== For counts of detected and suppressed errors, rerun with: -v
-==6879== Use --track-origins=yes to see where uninitialised values come from
-==6879== ERROR SUMMARY: 7 errors from 7 contexts (suppressed: 0 from 0)
+ num [1:9] NaN NaN NaN NaN NaN ...
+> 
+> 
+==6224== 
+==6224== HEAP SUMMARY:
+==6224==     in use at exit: 77,286,802 bytes in 10,884 blocks
+==6224==   total heap usage: 30,258 allocs, 19,374 frees, 116,140,760 bytes allocated
+==6224== 
+==6224== LEAK SUMMARY:
+==6224==    definitely lost: 0 bytes in 0 blocks
+==6224==    indirectly lost: 0 bytes in 0 blocks
+==6224==      possibly lost: 0 bytes in 0 blocks
+==6224==    still reachable: 77,286,802 bytes in 10,884 blocks
+==6224==                       of which reachable via heuristic:
+==6224==                         newarray           : 4,264 bytes in 1 blocks
+==6224==         suppressed: 0 bytes in 0 blocks
+==6224== Rerun with --leak-check=full to see details of leaked memory
+==6224== 
+==6224== For counts of detected and suppressed errors, rerun with: -v
+==6224== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 75 from 1)
 
 ```
 The Valgrind trace in short shows the following errors:
@@ -317,21 +237,15 @@ The Valgrind trace in short shows the following errors:
 ```R
 > library(RcppDeepState)
 > RcppDeepState::deepstate_logtest("/home/akhila/R/packages/ambient/inst/testfiles/gen_cubic2d_c/gen_cubic2d_c_output/log_9d161c6d257a3a7d8792ee6bd627aaf470a8c05f/valgrind_log")
+[[1]]
+           kind                     msg     errortrace
+1: InvalidRead    Invalid read of size 8 src/cubic.cpp:85
+                                                        address             trace
+1: Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc'd    NA
 
-              kind                                                        msg
-1: UninitCondition Conditional jump or move depends on uninitialised value(s)
-2: UninitCondition Conditional jump or move depends on uninitialised value(s)
-3: UninitCondition Conditional jump or move depends on uninitialised value(s)
-4: UninitCondition Conditional jump or move depends on uninitialised value(s)
-                 errortrace                address trace
-1:  src/FastNoise.cpp : 184 No address trace found    NA
-2: src/FastNoise.cpp : 1827 No address trace found    NA
-3: src/FastNoise.cpp : 1819 No address trace found    NA
-4:       src/cubic.cpp : 85 No address trace found    NA
 ```
 
-We see that an uninitialized-value use error is reported in the program. This happens when we use a value that hasn't been initialized.
-Valgrind complaints about this when the program tries to make use of this memory and it shows a Conditional jump or move depends on uninitialized value(s) message which results in undefined behavior.
+We see that an InvalidRead error is reported in the program. This happens when the process tries to access the memory location that is outside of the available memory locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
 
 Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
