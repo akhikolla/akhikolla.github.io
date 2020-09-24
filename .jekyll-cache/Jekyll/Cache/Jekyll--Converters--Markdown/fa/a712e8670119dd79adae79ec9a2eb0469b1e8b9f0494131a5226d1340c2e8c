@@ -1,0 +1,420 @@
+I"�<p><strong>RcppDeepState testharness for binsegRcpp package using RInisde</strong></p>
+
+<p>In this blog, I’ll be explaining the process of automating the testharness and integrating Rcpp with deepstate. This blog is a continuation of my previous blog explaining the idea of working with deepstate in R.</p>
+
+<p>If you want to know more about embedding a C program with R you can refer to <a href="https://tdhock.github.io/blog/2020/embedded-R/">Embedding_R</a>. Also, if you want to dig deeper and link functions of the Rcpp package with a main function in an external C++ file using RInside you can check <a href="https://tdhock.github.io/blog/2020/binsegRcppInside/">binsegRcpp_inside_C++_code</a>.</p>
+
+<p><strong>Integrating deepstate with Rcpp using RInside</strong></p>
+
+<p>To use RInside in any program first we need to create an Instance of RInside class, which represents an embedded R interpreter in that particular C/C++ program. RInside package is designed in such a way to make it easier to embed R in a C++ class.
+Using RInside in a C++ code follow 2 easy steps:</p>
+
+<p><strong><em>Including the RInside header</em></strong></p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="cp">#include &lt;RInside.h&gt;
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p><strong><em>Creating an Instance of R</em></strong></p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">RInside</span> <span class="nf">R</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="n">argv</span><span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here argc, argv are arguments of the main function. As we don’t have a main function in a testharness, we can just declare argc,argv, and make a call to R. Deepstate runs the test harness with a main function automatically at runtime.</p>
+
+<p><strong><em>Generation of TestHarness</em></strong></p>
+
+<p>I created a function that generates testharness based on the information taken from the RcppExports file in the package.</p>
+
+<p><code class="language-plaintext highlighter-rouge">RcppDeepState::deepstate_harness_create("package_path")</code> is a function that takes path of the package and generates a testharness for each function declared in the package.  </p>
+
+<p><code class="language-plaintext highlighter-rouge">deepstate_harness_create()</code> has the script to filter the RcppExports for function prototypes, Number of functions, Number of arguments for each function, and their names in the package.It also generates corresponding makefiles for the testharnesses.</p>
+
+<p>For example, if you want to run this function on the <code class="language-plaintext highlighter-rouge">binsegRcpp</code> package, use below line of code.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="c1">//Here ~/R/binsegRcpp path of binsegRcpp </span>
+<span class="n">deepstate_harness_create</span><span class="p">(</span><span class="s">"~/R/binsegRcpp"</span><span class="p">)</span> 
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>This function makes a call to following functions</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="n">deepstate_harness_create</span><span class="p">(</span><span class="n">package_path</span><span class="p">){</span>
+
+<span class="c1">//gives list of functions and their arguments in the package</span>
+<span class="n">binseg</span><span class="p">.</span><span class="n">list</span> <span class="o">&lt;-</span> <span class="n">get_fun_body</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span> 
+
+<span class="c1">//gives the prototypes of the functions in the package</span>
+<span class="err"> </span> <span class="n">prototypes</span> <span class="o">&lt;-</span><span class="n">get_prototype_of_functions</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+ 
+ <span class="c1">//script to generate Testharness</span>
+ 
+ <span class="c1">//creates make files for the generated testharness</span>
+ <span class="n">create_makefile</span><span class="p">(</span><span class="n">generatedTestharnessname</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>The obtained lists from the functions are filtered and placed accordingly in the Testharness.You can refer to the function <a href="https://github.com/akhikolla/RcppDeepState/blob/master/CreateRcppTestharness.R">deepstate_harness_create</a> here to understand in detail.</p>
+
+<p>In RcppDeepState, we have created the RcppDeepState.h header file in RcppDeepState/inst/include where all of the RcppDeepState_* function definitions are present, usually, header files placed in inst/include are considered to be in the root directory and can be accessed easily.
+Link to <a href="https://github.com/akhikolla/RcppDeepState/tree/master/RcppDeepState/inst/include">RcppDeepState/inst/include</a></p>
+
+<p>In the header file, we have the member functions to generate randomized vectors for that particular datatype. There is a detailed description of generating these random functions in my <a href="https://akhilakolla.github.io/posts/RcppDeepState-Introduction/">previous blog</a></p>
+
+<p><strong>What happens inside the testharness?</strong></p>
+
+<p>First, It will include two header files one is <code class="language-plaintext highlighter-rouge">RInside.h</code> which provides all the necessary functions to embed R with C++ and the second is <code class="language-plaintext highlighter-rouge">RcppDeepState.h</code> as it has the randomized vector definitions which will be used in the testharness.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="cp">#include &lt;RInside.h&gt;
+#include &lt;RcppDeepState.h&gt; 
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>binsegRcpp package has two functions with the following prototypes and both the functions accept two input arguments: an IntegerVector and a NumericVector.  </p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="n">Rcpp</span><span class="o">::</span><span class="n">List</span><span class="w"> </span><span class="n">rcpp_binseg_normal</span><span class="p">(</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">NumericVector</span><span class="p">,</span><span class="w"> </span><span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span><span class="p">);</span><span class="w">
+</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">List</span><span class="w"> </span><span class="n">rcpp_binseg_normal_cost</span><span class="p">(</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">NumericVector</span><span class="p">,</span><span class="w"> </span><span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span><span class="p">);</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>As we are generating the testharness for rcpp_binseg_normal. It will declare the prototype of this function in the testharness for the compiler to recognize it.</p>
+
+<p>TEST macro is always written inside a Testharness. This TEST macro will take the unit test name and test name as arguments. For each function in the package binsegRcpp, a testharness is created.</p>
+
+<p>Let’s see an example of testharness for rcpp_binseg_normal() (one of the functions in binsegRcpp).</p>
+
+<p>For rcpp_binseg_normal(), binseg_normal_DeepState_TestHarness.cpp is the name of the testharness.
+The unit test name is binseg_normal_name_randomdatatypes which is the first argument for the TEST macro, The test name is binseg_normal_name_test which is the second argument for the TEST macro</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="n">TEST</span> <span class="p">(</span><span class="n">binseg_normal_randomdatatypes</span><span class="p">,</span><span class="n">rcpp_binseg_normal_test</span><span class="p">){</span>
+<span class="c1">//test harness code</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Inside the test macro, it will declare two variables <code class="language-plaintext highlighter-rouge">argc,argv</code>.</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="kt">int</span> <span class="n">argc</span><span class="p">;</span>
+<span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">;</span> 
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Now it will create an instance of RInside by passing the above-declared variables as arguments which will help to embed R with C++.</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">RInside</span> <span class="nf">R</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span><span class="n">argc</span><span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Now as we need to test rcpp_binseg_normal we need two data vectors. These data vectors are randomly generated by making a call to the randomized vector functions of <code class="language-plaintext highlighter-rouge">RcppDeepState.h</code> header file.</p>
+
+<p>The below code explains how those function calls are being made.
+A call to RcppDeepState_NumericVector is made and it returns a random numericvector whose values are stored in data_vec, and a call to RcppDeepState_IntegerVector is made and it returns a random IntegerVector whose values are stored in max_segments.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="n">Rcpp</span><span class="o">::</span><span class="n">NumericVector</span><span class="w"> </span><span class="n">data_vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RcppDeepState_NumericVector</span><span class="p">();</span><span class="w">
+</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span><span class="w"> </span><span class="n">max_segments</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RcppDeepState_IntegerVector</span><span class="p">();</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>Now, these data_vec, max_segments with randomized values are passed to rcpp_binseg_normal.The below code makes a call to the rcpp_binseg_normal function in binsegRcpp package.
+ </p>
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">rcpp_binseg_normal</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span><span class="w"> </span><span class="n">max_segments</span><span class="p">);</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p><strong>binseg_normal_DeepState_TestHarness.cpp</strong></p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="c1">//including the necessary headers</span>
+<span class="cp">#include &lt;RInside.h&gt;
+#include &lt;RcppDeepState.h&gt; 
+</span>
+<span class="c1">//declaring the prototype of the function for the compiler to recognize it. </span>
+<span class="n">Rcpp</span><span class="o">::</span><span class="n">List</span> <span class="nf">rcpp_binseg_normal</span><span class="p">(</span><span class="k">const</span> <span class="n">Rcpp</span><span class="o">::</span><span class="n">NumericVector</span> <span class="n">data_vec</span><span class="p">,</span> <span class="k">const</span> <span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span> <span class="n">max_segments</span><span class="p">);</span>
+
+<span class="c1">//defining the test macro</span>
+<span class="n">TEST</span> <span class="p">(</span><span class="n">binseg_normal_randomdatatypes</span><span class="p">,</span><span class="n">rcpp_binseg_normal_test</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="c1">//declare commandline arguments as there is no main function at this time in the code</span>
+<span class="kt">int</span> <span class="n">argc</span><span class="p">;</span>
+<span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">;</span> 
+
+<span class="c1">//calling instance of R</span>
+<span class="n">RInside</span> <span class="n">R</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span><span class="n">argc</span><span class="p">);</span>
+
+<span class="c1">//making a call to randomized vector methods of class RcppDeepState and storing the return values</span>
+<span class="n">Rcpp</span><span class="o">::</span><span class="n">NumericVector</span> <span class="n">data_vec</span> <span class="o">=</span><span class="n">RcppDeepState_NumericVector</span><span class="p">();</span>
+<span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span> <span class="n">max_segments</span> <span class="o">=</span><span class="n">RcppDeepState_IntegerVector</span><span class="p">();</span>
+
+<span class="c1">//making a call to rcpp_binseg_normal passing those random values</span>
+<span class="n">rcpp_binseg_normal</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="n">max_segments</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>For the code to compile first we need to install the binsegRcpp package in the system. After the installation, binsegRcpp/src has the compiled object files which are used during the compilation of testharness.You can find <a href="https://github.com/tdhock/binsegRcpp/blob/master/src/rcpp_interface.cpp">binsegRcpp_package</a> here.</p>
+
+<p>To compile the test harness of rcpp_binseg_normal(), we require a Makefile. The same deepstate_harness_create() will make a call to create_makefile() function which creates the respective makefile for the testharness. In our case, it created <code class="language-plaintext highlighter-rouge">rcpp_binseg_normal.Makefile</code></p>
+
+<p>The below snippet shows what happens when we run the code without any fuzzer.
+if we run the code without any fuzzer it will execute the test case with default values for the respective datatypes.
+Example: The default value of Integer is 0  and Numeric is 0.0</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="n">akhila</span><span class="err">@</span><span class="n">akhila</span><span class="o">-</span><span class="n">VirtualBox</span><span class="o">:~/</span><span class="n">R</span><span class="err">$</span> <span class="n">rm</span> <span class="o">-</span><span class="n">f</span> <span class="o">*</span><span class="p">.</span><span class="n">o</span> <span class="o">&amp;&amp;</span> <span class="n">make</span> <span class="o">-</span><span class="n">f</span> <span class="n">binsegnormal</span><span class="p">.</span><span class="n">Makefile</span> <span class="n">binseg_normal_DeepState_TestHarness</span>
+<span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">Rcpp</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span> <span class="o">-</span><span class="n">o</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">o</span> <span class="o">-</span><span class="n">c</span>
+<span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">o</span> <span class="n">binseg_normal_DeepState_TestHarness</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">o</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">include</span><span class="o">/</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">lR</span> <span class="o">-</span><span class="n">lRInside</span> <span class="o">-</span><span class="n">ldeepstate</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">binsegRcpp</span><span class="o">/</span><span class="n">src</span><span class="o">/*</span><span class="p">.</span><span class="n">o</span>
+<span class="p">.</span><span class="o">/</span><span class="n">binseg_normal_DeepState_TestHarness</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="n">Running</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> <span class="n">from</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">:</span> <span class="n">before</span> <span class="n">declaration</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span><span class="o">:</span> <span class="n">after</span> <span class="n">assignment</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">2</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">3</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">4</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="n">Passed</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Breaking down the lines in the Makefile, the compilation has 3 steps</p>
+
+<p><strong>Compiling step:</strong></p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">Rcpp</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span> <span class="o">-</span><span class="n">o</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">o</span> <span class="o">-</span><span class="n">c</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here we include all the libraries that are necessary to compile the code, COMMON_FLAGS have list of libraries that are to be included at the time of compiling the code</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">COMMON_FLAGS</span><span class="o">=</span><span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">o</span> <span class="err"> </span><span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="err">$</span><span class="p">{</span><span class="n">R_HOME</span><span class="p">}</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=</span><span class="err">$</span><span class="p">{</span><span class="n">R_HOME</span><span class="p">}</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">lR</span> <span class="o">-</span><span class="n">lRInside</span> <span class="o">-</span><span class="n">ldeepstate</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p><strong>Linking step:</strong></p>
+
+<p>We link the compiled testharness in the above step with the object file of the functions as 
+follows:</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">clang</span><span class="o">++</span> <span class="o">-</span><span class="n">o</span> <span class="n">binseg_normal_DeepState_TestHarness</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">o</span> <span class="o">-</span><span class="n">I</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">library</span><span class="o">/</span><span class="n">RInside</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">L</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">Wl</span><span class="p">,</span><span class="o">-</span><span class="n">rpath</span><span class="o">=/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">deepstate</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">lR</span> <span class="o">-</span><span class="n">lRInside</span> <span class="o">-</span><span class="n">ldeepstate</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">binsegRcpp</span><span class="o">/</span><span class="n">src</span><span class="o">/*</span><span class="p">.</span><span class="n">o</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p><strong>Running the Code:</strong></p>
+
+<p>In the rcpp_binsegnormal.Makefile we didn’t specify the executable to run with fuzzers, resulting in default values being passed on the function. If we want to run the executable with fuzzer all we have to do is add the <code class="language-plaintext highlighter-rouge">--fuzz</code> argument to the executable.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="p">.</span><span class="o">/</span><span class="n">binseg_normal_DeepState_TestHarness</span> <span class="err">–</span><span class="n">fuzz</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Using <code class="language-plaintext highlighter-rouge">—fuzz</code> argument during the runtime helps us get the randomized fuzzing inputs to be passed on to the executable.
+If you want to see those fuzzing inputs on the console you can just add <code class="language-plaintext highlighter-rouge">–min_level_log 0</code> argument.
+The <code class="language-plaintext highlighter-rouge">min_log_level</code> argument controls the way inputs are displayed on the console while fuzzing.</p>
+
+<p>Running the executable with <code class="language-plaintext highlighter-rouge">fuzz</code> and <code class="language-plaintext highlighter-rouge">min_level_log</code> arguments :</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="n">akhila</span><span class="err">@</span><span class="n">akhila</span><span class="o">-</span><span class="n">VirtualBox</span><span class="o">:~/</span><span class="n">R</span><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">binseg_normal_DeepState_TestHarness</span> <span class="o">--</span><span class="n">fuzz</span> <span class="o">--</span><span class="n">min_log_level</span> <span class="mi">0</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="n">Starting</span> <span class="n">fuzzing</span>
+<span class="n">WARNING</span><span class="o">:</span> <span class="n">No</span> <span class="n">seed</span> <span class="n">provided</span><span class="p">;</span> <span class="k">using</span> <span class="mi">1588038306</span>
+<span class="n">WARNING</span><span class="o">:</span> <span class="n">No</span> <span class="n">test</span> <span class="n">specified</span><span class="p">,</span> <span class="n">defaulting</span> <span class="n">to</span> <span class="n">first</span> <span class="n">test</span> <span class="n">defined</span> <span class="p">(</span><span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span><span class="p">)</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="n">Running</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> <span class="n">from</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">:</span> <span class="n">before</span> <span class="n">declaration</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span><span class="o">:</span> <span class="n">after</span> <span class="n">assignment</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="o">-</span><span class="mf">12563812741723733078733884073387044629005491060075677258726713056417780995798020336653792386553526424619637830649583857521090658230996187146232755069113565923454666543942553438502052028584808990707067614737351070834911295195278791062329372854128548541690368660149302893900452908812991244328340473551832219648.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">2</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span>
+<span class="err"> </span><span class="n">index</span><span class="o">:</span> <span class="mi">3</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="o">-</span><span class="mf">59112322608599703552.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span><span class="o">:</span> 
+<span class="n">index</span><span class="o">:</span> <span class="mi">4</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="n">Passed</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> 
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>TestHarness is created, compiled, and executed the same for rcpp_binseg_normal_cost() in the package.Similarly the same is carried for every function present in that package.</p>
+
+<p>After running the executable with fuzz we get the count of passed and failed testcases:</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nl">INFO:</span> <span class="n">Done</span> <span class="n">fuzzing</span><span class="o">!</span> <span class="n">Ran</span> <span class="mi">166</span> <span class="n">tests</span> <span class="p">(</span><span class="mi">1</span> <span class="n">tests</span><span class="o">/</span><span class="n">second</span><span class="p">)</span> <span class="n">with</span> <span class="mi">87</span> <span class="n">failed</span><span class="o">/</span><span class="mi">79</span> <span class="n">passed</span><span class="o">/</span><span class="mi">0</span> <span class="n">abandoned</span> <span class="n">tests</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here 166 testcases are ran but only 79 of them passed and 87 failed.</p>
+
+<p>Failing of binsegRcpp::rcpp_binseg_normal() include following conditions:
+rcpp_binseg_normal throws errors in 3 cases. All of these errors are particularized previously in the function.</p>
+
+<p><strong>Case 1:</strong>
+if size of data_vec is less than 1 - it throws NO_DATA error.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre><span class="nl">TRACE:</span> <span class="nl">Running:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> <span class="n">from</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">numeric</span> <span class="n">vector</span> <span class="mi">0</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">integer</span> <span class="n">vector</span> <span class="mi">7</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">0</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">0</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">2</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">1</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">3</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">5</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">4</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">1</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">5</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">5</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">6</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">1</span>
+<span class="n">terminate</span> <span class="n">called</span> <span class="n">after</span> <span class="n">throwing</span> <span class="n">an</span> <span class="n">instance</span> <span class="n">of</span> <span class="err">'</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">exception</span><span class="err">'</span>
+  <span class="n">what</span><span class="p">()</span><span class="o">:</span>  <span class="n">no</span> <span class="n">data</span>
+<span class="n">ERROR</span><span class="o">:</span> <span class="n">Failed</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here the first line represents the trace of running the unit test binseg_normal_randomdatatypes for the test name binseg_normal_test from the binseg_normal_DeepState_TestHarness.cpp file.
+The next line gives the size of data_vec. The next 8 lines give the size of the max_segments and the values assigned to it.
+As the size of data_vec is zero system throws <code class="language-plaintext highlighter-rouge">Rcpp:: exception - no data</code></p>
+
+<p><strong>Case 2:</strong>
+When deepstate passes max_segments value less than 1 - it throws NO_SEGMENTS error.</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nl">TRACE:</span> <span class="nl">Running:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> <span class="n">from</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">numeric</span> <span class="n">vector</span> <span class="mi">3</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="o">-</span><span class="mf">0.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">2</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="o">-</span><span class="mf">549597172537956305361476352992032084967034120685391253548321674087287542206259282924505133616777038420141334167021856546111699614438625352540376419326680499753137951174060529473856821415788016811851287442002018219512838717832056589714313327622732747428243813670070517760.000000</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">integer</span> <span class="n">vector</span> <span class="mi">1</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">0</span>
+<span class="n">terminate</span> <span class="n">called</span> <span class="n">after</span> <span class="n">throwing</span> <span class="n">an</span> <span class="n">instance</span> <span class="n">of</span> <span class="err">'</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">exception</span><span class="err">'</span>
+  <span class="n">what</span><span class="p">()</span><span class="o">:</span>  <span class="n">no</span> <span class="n">segments</span>
+<span class="n">ERROR</span><span class="o">:</span> <span class="n">Failed</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here the first line represents the trace of running the unit test binseg_normal_randomdatatypes for the test name binseg_normal_test from the binseg_normal_DeepState_TestHarness.cpp file.
+The next 6 lines give the size of data_vec and values present in it.
+The next line gives the size of the max_segments and the values assigned to it.
+Here we encountered <code class="language-plaintext highlighter-rouge">Rcpp::Exception no segments</code> error because max_segments values are less than one</p>
+
+<p><strong>Case 3:</strong>
+when deepstate passes size of data_vec is less than the value in max_segments - it throws TOO_MANY_SEGMENTS error.</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nl">TRACE:</span> <span class="nl">Running:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span> <span class="n">from</span> <span class="n">binseg_normal_DeepState_TestHarness</span><span class="p">.</span><span class="n">cpp</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">numeric</span> <span class="n">vector</span> <span class="mi">2</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">6485702193556522171471109734302530991973990400.000000</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_numeric</span> <span class="n">vector</span><span class="o">:</span> <span class="mf">0.000000</span>
+<span class="n">INFO</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="o">:</span> <span class="n">size</span> <span class="n">of</span> <span class="n">integer</span> <span class="n">vector</span> <span class="mi">2</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">0</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">3</span>
+<span class="n">TRACE</span><span class="o">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">akhila</span><span class="o">/</span><span class="n">R</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="o">/</span><span class="n">inst</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">RcppDeepState</span><span class="p">.</span><span class="n">h</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span><span class="o">:</span> <span class="n">index</span><span class="o">:</span> <span class="mi">1</span> <span class="n">rand_Integer</span> <span class="n">vector</span><span class="o">:</span> <span class="mi">4</span>
+<span class="n">terminate</span> <span class="n">called</span> <span class="n">after</span> <span class="n">throwing</span> <span class="n">an</span> <span class="n">instance</span> <span class="n">of</span> <span class="err">'</span><span class="n">Rcpp</span><span class="o">::</span><span class="n">exception</span><span class="err">'</span>
+  <span class="n">what</span><span class="p">()</span><span class="o">:</span>  <span class="n">too</span> <span class="n">many</span> <span class="n">segments</span>
+<span class="n">ERROR</span><span class="o">:</span> <span class="n">Failed</span><span class="o">:</span> <span class="n">binseg_normal_randomdatatypes_rcpp_binseg_normal_test</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>Here the first line represents the trace of running the unit test binseg_normal_randomdatatypes for the test name binseg_normal_test from the binseg_normal_DeepState_TestHarness.cpp file.
+The next 3 lines give the size of data_vec and values present in it.
+The next 3 lines gives the size of the max_segments and the values assigned to it.
+Here we encountered <code class="language-plaintext highlighter-rouge">Rcpp::Exception too many segments</code> error because max_segments value is greater than the size of data_vec.</p>
+
+<p>Considering the above conditions, for rcpp_binseg_normal to run without throwing any expected errors we can handle those errors with the help of try and catch block.</p>
+
+<p>These expected errors can be handled by placing a try-catch block around the function call rcpp_binseg_normal() inside the testharness. While running the above code block when the Rcpp::exception is thrown the catcher recognizes and handles it as std::exception, which is the base class for all the exceptions.</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="k">try</span><span class="p">{</span>
+<span class="n">rcpp_binseg_normal</span><span class="p">(</span><span class="n">data_vec</span><span class="p">,</span> <span class="n">max_segments</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">){</span>
+<span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Exception Handled"</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>The above code handles the exceptions generated by the testharness which will continue the execution of the testharness without failing it.</p>
+
+<p>Thanks to <a href="https://tdhock.github.io/blog/">Dr.Toby Dylan Hocking</a> for his support.
+This blog is kindly contributed to <a href="https://www.r-bloggers.com/">R-bloggers</a>.</p>
+:ET

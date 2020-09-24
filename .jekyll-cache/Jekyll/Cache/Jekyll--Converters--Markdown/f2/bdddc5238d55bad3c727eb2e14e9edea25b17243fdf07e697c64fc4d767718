@@ -1,0 +1,81 @@
+I"‹<div id="archives" class="pl-xl-2">
+
+  
+  
+  
+    
+    
+  <span class="lead">2020</span>
+  <ul class="list-unstyled">
+  
+    <li>
+      <div>
+        
+        
+        <span class="date day">23</span>
+        <span class="date month small text-muted">Sep</span>
+        <a href="/posts/Prototyping-testharness/">Prototyping test harness</a>
+      </div>
+    </li>
+  
+
+  
+  
+  
+    <li>
+      <div>
+        
+        
+        <span class="date day">30</span>
+        <span class="date month small text-muted">Aug</span>
+        <a href="/posts/Rcpp-Packages-Limited-FuzzTesting/">Rcpp Packages Limited Fuzz Testing</a>
+      </div>
+    </li>
+  
+
+  
+  
+  
+    <li>
+      <div>
+        
+        
+        <span class="date day">24</span>
+        <span class="date month small text-muted">Jun</span>
+        <a href="/posts/Testing-Rcpp-Packages/">Testing Rcpp packages</a>
+      </div>
+    </li>
+  
+
+  
+  
+  
+    <li>
+      <div>
+        
+        
+        <span class="date day">17</span>
+        <span class="date month small text-muted">Apr</span>
+        <a href="/posts/Automating-Test-Harness/">Automating the TestHarness</a>
+      </div>
+    </li>
+  
+
+  
+  
+  
+    <li>
+      <div>
+        
+        
+        <span class="date day">27</span>
+        <span class="date month small text-muted">Feb</span>
+        <a href="/posts/RcppDeepState-Introduction/">RcppDeepState</a>
+      </div>
+    </li>
+  
+  </ul>
+  
+
+</div>
+:ET
