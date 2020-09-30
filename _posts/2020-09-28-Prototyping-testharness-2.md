@@ -8,7 +8,7 @@ math: true
 
 As a part of [R consortium fuzz testing proposal](https://docs.google.com/document/d/15z2diPTJ3MTLe3H9WfHNAdzkn1bYIsLJ6_tpGWRqQBU/edit), we are creating a simple prototype on how to extract the valid inputs for a function from the RcppTestPackage and test it with Valgrind. We also test the `test harness` of the same rcpp method by passing DeepState's randomized inputs and see if Valgrind can detect any errors for those inputs.
 
-In the [previous blog post](https://akhikolla.github.io./posts/Prototyping-testharness/) we learnt to extract the valid inputs for functions and test the functions with both valid inputs and DeepState generated random inputs and check for Valgrind errors . In this blog post we will go one step further and try to find errors in the exported functions in the package. 
+In the [previous blog post](https://akhikolla.github.io./posts/Prototyping-testharness/) we learned to extract the valid inputs for functions and test the functions with both valid inputs and DeepState generated random inputs and check for Valgrind errors. In this blog post, we will go one step further and try to find errors in the exported functions in the package. 
 
 Here we will perform all our tests and analysis on the Rcpp package `BNSL`. For example, consider the rcpp function - `BNSL::mi` we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples. 
 
@@ -81,7 +81,7 @@ mi> x=rnorm(n); z=rnorm(n); y=0.9*x+sqrt(1-0.9^2)*z; mi(x,y,proc=10)
 > 
 
 ```
-We don't any issues with running the examples on the `mi` function. Now let's try using valgrind with it and see if we find any issues with the function.
+We don't any issues with running the examples on the `mi` function. Now let's try using Valgrind with it and see if we find any issues with the function.
 
 **Run function under valgrind:**
 ```shell
@@ -139,9 +139,9 @@ Type 'q()' to quit R.
 
 
 ```
-Running the code under valgrind didn't show any bugs or memory leaks. Let's go one step ahead and try running the function under deepstate generated inputs.
+Running the code under Valgrind didn't show any bugs or memory leaks. Let's go one step ahead and try running the function under deepstate generated inputs.
 
-As we know to run a code under deepstate:
+As we know to run code under deepstate:
 
 1.Create testharness for the function.
 2.Compile the testharness
@@ -262,7 +262,7 @@ Type 'q()' to quit R.
 ==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
 ==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
 ==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
-(discontinued log)[]
+(discontinued log)...
 ==1365599== Use of uninitialised value of size 8
 ==1365599==    at 0x4D39C5F: __mpn_addmul_1 (addmul_1.S:41)
 ==1365599==    by 0x1FFEFF761F: ???
@@ -307,17 +307,17 @@ NULL
 ==1365599== For lists of detected and suppressed errors, rerun with: -s
 ==1365599== ERROR SUMMARY: 31504 errors from 311 contexts (suppressed: 0 from 0)
 ```
+The complete log can be found here [valgrind log mi](https://github.com/akhikolla/RcppDeepStateTools/blob/master/inst/valgrind_log_mi)
 
-We see that there are 31504 errors that are reported in the program from 311 contexts.
-Also we can see the issues like :
+We see that 31504 errors are reported in the program from 311 contexts.
+Also, we can see issues like :
 
-Conditional jump or move depends on uninitialised value(s)
-Use of uninitialised value of size 8
+Conditional jump or move depends on the uninitialized value(s)
+Use of an uninitialized value of size 8
 
 This happens when the process tries to access the memory location that is outside of the available memory locations or the uninitialized memory. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
-
-Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
+Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
 This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
 
