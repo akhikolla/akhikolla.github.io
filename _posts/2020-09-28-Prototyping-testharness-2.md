@@ -12,7 +12,7 @@ In the [previous blog post](https://akhikolla.github.io./posts/Prototyping-testh
 
 Here we will perform all our tests and analysis on the Rcpp package `BNSL`. For example, consider the rcpp function - `BNSL::mi` we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples. 
 
-**Run the valid example on the function call:**
+**find the valid examples:**
 
 ```R
 n=100
@@ -81,7 +81,7 @@ mi> x=rnorm(n); z=rnorm(n); y=0.9*x+sqrt(1-0.9^2)*z; mi(x,y,proc=10)
 > 
 
 ```
-We don't any issues with running the examples on the `mi` function. Now let's try using Valgrind with it and see if we find any issues with the function.
+We find don't any issues with running the examples on the `mi` function. Now let's try using Valgrind with it and see if we find any issues with the function.
 
 **Run function under valgrind:**
 ```shell
@@ -143,20 +143,14 @@ Running the code under Valgrind didn't show any bugs or memory leaks. Let's go o
 
 As we know to run code under deepstate:
 
-1.Create testharness for the function.
-2.Compile the testharness
-3.Run the testharness
-4.Generate the crash files
-5.Check the crash files for inputs that can break the code.
+* Create testharness for the function.
+* Compile the testharness
+* Run the testharness
+* Generate the crash files
+* Check the crash files for inputs that can break the code.
 
 
-Now make a call to `mi()` and store the deepstate inputs that are obtained from the crash files into a list.
-
-```shell
-akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL$ R -d valgrind --vanilla < mi-test.R
-```
-
-This will open the R session and will run the mi() with the deepstate inputs and the output is as follows: 
+Now store the deepstate inputs that are obtained from the crash files into a list.
 
 
 **mi-test.R**
@@ -169,6 +163,14 @@ proc=-784179594)
  
 dresult <- do.call(BNSL::mi,dargs)
 ```
+Run the mi-test.R file which makes a call to `mi()`
+
+```shell
+akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL$ R -d valgrind --vanilla < mi-test.R
+```
+
+This will open the R session and will run the mi() with the deepstate inputs and the output is as follows: 
+
 
 **Output**
 ```shell
@@ -315,7 +317,7 @@ Also, we can see issues like :
 Conditional jump or move depends on the uninitialized value(s)
 Use of an uninitialized value of size 8
 
-This happens when the process tries to access the memory location that is outside of the available memory locations or the uninitialized memory. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
+These happen when the process tries to access the memory locations that are outside of the available memory locations or the uninitialized locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
 Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
 This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
