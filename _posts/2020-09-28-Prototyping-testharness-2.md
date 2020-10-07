@@ -319,6 +319,16 @@ Use of an uninitialized value of size 8
 
 These happen when the process tries to access the memory locations that are outside of the available memory locations or the uninitialized locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
+Here when we look at the code from where Valgrind found issues in src/mi_cmi.cpp.
+We can see the issue is with the table parameter and in the following line of code 
+
+```c++
+IntegerVector c_x=table(x), c_y=table(y), c_xy=table(x+1000*y);
+```
+If we observe the IntegerVector c_xy, it is a combination of values from NumericVectors x and y. The vector c_xy is uninitialized when it uses values like NaN, NA from x,y. The creation of vector c_xy fails. Although the creation c_xy failed, we are trying to access it. Valgrind starts complaining about the issue by throwing an error message `Conditional jump or move depends on the uninitialized value(s)`.
+
+A simple fix could be value checking or restricting the acceptance of values like NaN, NA onto the vector c_xy.
+
 Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
 This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
