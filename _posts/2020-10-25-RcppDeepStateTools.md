@@ -122,7 +122,7 @@ afl-fuzz 2.52b by <lcamtuf@google.com>
 ```
 
 The afl output looks something like this:
-![Test Image 4](https://github.com/akhikolla/akhikolla.github.io/tree/master/assets/img/sample/afl.png)
+![Test Image 4](akhikolla.github.io/assets/img/sample/afl.png)
 
 
 
