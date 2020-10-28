@@ -10,9 +10,9 @@ As a part of the RcppDeepState project, we created another Linux specific R pack
 
 1. AFL 
 2. LibFuzzer 
-3. Angora
+3. Eclipser
 4. HonggFuzz
-5. Eclipser
+5. Angora
 
 In this blog post, I'll discuss how to use these external fuzzers for running the DeepState function-specific test harnesses. 
 To test any Rcpp package using any of these fuzzers is as easy as making a call to deepstate_compile_tools() function.
@@ -127,8 +127,36 @@ afl-fuzz 2.52b by <lcamtuf@google.com>
 
 The afl output looks something like this:
 
-<img src="https://github.com/akhikolla/akhikolla.github.io/blob/master/assets/img/sample/afl.png"/>
+```shell
+     american fuzzy lop 2.52b (rcpp_read_out_of_bound_DeepState_TestHar...)
 
+┌─ process timing ─────────────────────────────────────┬─ overall results ─────┐
+│        run time : 0 days, 1 hrs, 11 min, 17 sec      │  cycles done : 498    │
+│   last new path : none yet (odd, check syntax!)      │  total paths : 7      │
+│ last uniq crash : none seen yet                      │ uniq crashes : 0      │
+│  last uniq hang : none seen yet                      │   uniq hangs : 0      │
+├─ cycle progress ────────────────────┬─ map coverage ─┴───────────────────────┤
+│  now processing : 4* (57.14%)       │    map density : 0.38% / 0.38%         │
+│ paths timed out : 0 (0.00%)         │ count coverage : 1.00 bits/tuple       │
+├─ stage progress ────────────────────┼─ findings in depth ────────────────────┤
+│  now trying : splice 13             │ favored paths : 1 (14.29%)             │
+│ stage execs : 16/32 (50.00%)        │  new edges on : 1 (14.29%)             │
+│ total execs : 2.33M                 │ total crashes : 0 (0 unique)           │
+│  exec speed : 430.4/sec             │  total tmouts : 0 (0 unique)           │
+├─ fuzzing strategy yields ───────────┴───────────────┬─ path geometry ────────┤
+│   bit flips : 0/224, 0/217, 0/203                   │    levels : 1          │
+│  byte flips : 0/28, 0/21, 0/7                       │   pending : 0          │
+│ arithmetics : 0/1554, 0/28, 0/0                     │  pend fav : 0          │
+│  known ints : 0/134, 0/582, 0/308                   │ own finds : 0          │
+│  dictionary : 0/0, 0/0, 0/0                         │  imported : n/a        │
+│       havoc : 0/897k, 0/1.43M                       │ stability : 100.00%    │
+│        trim : 100.00%/147, 0.00%                    ├────────────────────────┘
+│─────────────────────────────────────────────────────┘          [cpu000: 71%]
+
+
+[+] We're done here. Have a nice day!
+
+```
 
 When we run a target binary using AFL we get an afl output folder which contains the following directories:
 1. crashes - This folder contains all the file inputs that caused crashes on the executable
@@ -172,5 +200,224 @@ Start time:'2020-10-28.00.12.14' bin:'/home/akhila/R/x86_64-pc-linux-gnu-library
 
 ```
 
+**Eclipser**
+
+```shell
+> deepstate_compile_tools(path)
+Please choose an option to select the Fuzzer:
+1 - AFL
+2 - LibFuzzer
+3 - Eclipser
+4 - HonggFuzz
+3
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && deepstate-eclipser ./rcpp_read_out_of_bound_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 11932.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 11932 and childs.
+INFO:deepstate.core.fuzz:Fuzzer subprocess (PID 11932) exited with `0`
+INFO:deepstate.core.fuzz:Fuzzer exec time: 51.86s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_deallocate/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_deallocate && deepstate-eclipser ./rcpp_use_after_deallocate_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_deallocate/rcpp_use_after_deallocate_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 12791.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:12791
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856586
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:12791
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856586
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:12791
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856586
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.core.fuzz:Fuzzer Eclipser (PID 12791) exited with return code 0.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:12791
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856586
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 12791 and childs.
+INFO:deepstate.core.fuzz:Fuzzer exec time: 51.1s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_free/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_free && deepstate-eclipser ./rcpp_use_after_free_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_after_free/rcpp_use_after_free_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 13360.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:13360
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856643
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:13360
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856643
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:13360
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856643
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:13360
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856643
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 13360 and childs.
+INFO:deepstate.core.fuzz:Fuzzer subprocess (PID 13360) exited with `0`
+INFO:deepstate.core.fuzz:Fuzzer exec time: 47.56s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_uninitialized/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_uninitialized && deepstate-eclipser ./rcpp_use_uninitialized_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_use_uninitialized/rcpp_use_uninitialized_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 14038.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14038
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856701
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14038
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856701
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14038
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856701
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14038
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856701
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 14038 and childs.
+INFO:deepstate.core.fuzz:Fuzzer subprocess (PID 14038) exited with `0`
+INFO:deepstate.core.fuzz:Fuzzer exec time: 40.82s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_write_index_outofbound/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_write_index_outofbound && deepstate-eclipser ./rcpp_write_index_outofbound_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_write_index_outofbound/rcpp_write_index_outofbound_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 14629.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14629
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856752
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14629
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856752
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14629
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856752
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.core.fuzz:Fuzzer Eclipser (PID 14629) exited with return code 0.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:14629
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856752
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 14629 and childs.
+INFO:deepstate.core.fuzz:Fuzzer exec time: 46.22s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+[1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_zero_sized_array/Eclipser.Makefile"
+cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_zero_sized_array && deepstate-eclipser ./rcpp_zero_sized_array_DeepState_TestHarness -o eclipser_out --timeout 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from --min_log_level: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn't limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['dotnet', '/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll', 'fuzz', '--program', '/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_zero_sized_array/rcpp_zero_sized_array_DeepState_TestHarness', '--src', 'file', '--fixfilepath', 'eclipser.input', '--initarg', '--input_test_file eclipser.input --abort_on_fail --no_fork --min_log_level 2', '--outputdir', 'eclipser_out/the_fuzzer', '--maxfilelen', '8192', '--timelimit', '30']`
+INFO:deepstate.core.fuzz:Using DeepState output.
+INFO:deepstate.core.fuzz:Started fuzzer process with PID 15236.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:15236
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856804
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:15236
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856804
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:15236
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856804
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.core.fuzz:Fuzzer Eclipser (PID 15236) exited with return code 0.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:15236
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856804
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Killing process 15236 and childs.
+INFO:deepstate.core.fuzz:Fuzzer exec time: 46.52s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+> 
+
+```
 
 
