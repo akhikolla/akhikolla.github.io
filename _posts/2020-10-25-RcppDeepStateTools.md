@@ -122,8 +122,44 @@ afl-fuzz 2.52b by <lcamtuf@google.com>
 ```
 
 The afl output looks something like this:
-![Test Image 4](akhikolla.github.io/assets/img/sample/afl.png)
 
+![afl test](https://github.com/akhikolla/akhikolla.github.io/blob/master/assets/img/sample/afl.png)
+
+
+
+**HonggFuzz**
+
+When we test the package using hongg fuzz the output looks something like this:
+
+First runs the make file and then executes the testharness:
+
+```shell
+> RcppDeepStateTools::deepstate_compile_tools(path)
+Please choose an option to select the Fuzzer:
+1 - AFL
+2 - LibFuzzer
+3 - Eclipser
+4 - HonggFuzz4
+[1] "rm -f *.o && make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Hongg.Makefile"
+/home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -c
+/home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include -I/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -I/home/akhila/.RcppDeepState/deepstate-master/src/include -L/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -Wl,-rpath=/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -L/usr/share/R/lib -Wl,-rpath=/usr/share/R/lib -L/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -Wl,-rpath=/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -lR -lRInside -ldeepstate_HFUZZ -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/*.cpp
+cd /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && /home/akhila/.RcppDeepState/honggfuzz/honggfuzz -t 2000 -i /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output -x -- /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg ___FILE___ --fuzz_save_passing 
+Start time:'2020-10-28.00.12.14' bin:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg', input:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output', output:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output', persistent:false, stdin:false, mutation_rate:5, timeout:2000, max_runs:0, threads:6, minimize:false, git_commit:af84d98b2e5ddf1dca6c81a23a8e579e83af7139
+
+------------------------[  0 days 00 hrs 11 mins 04 secs ]----------------------
+  Iterations : 519174 [519.17k]
+        Mode : Static
+      Target : /home/akhila/R/x86_64-pc-linux-g.....FILE___ --fuzz_save_passing
+     Threads : 6, CPUs: 12, CPU%: 690% [57%/CPU]
+       Speed : 805/sec [avg: 781]
+     Crashes : 0 [unique: 0, blacklist: 0, verified: 0]
+    Timeouts : 0 [2000 sec]
+ Corpus Size : 0, max: 8192 bytes, init: 86885 files
+  Cov Update : 0 days 00 hrs 11 mins 04 secs ago
+    Coverage : [none]
+---------------------------------- [ LOGS ] ------------------/ honggfuzz 2.3 /-
+
+```
 
 
 
