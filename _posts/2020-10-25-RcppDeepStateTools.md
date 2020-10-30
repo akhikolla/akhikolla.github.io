@@ -28,13 +28,14 @@ This function takes the path to the package that you want to test. I'll use the 
 
 ```R
 > path <- "~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN"
-> RcppDeepStateTools::deepstate_compile_tools(path)
-Please choose an option to select the Fuzzer:
-1 - AFL
-2 - LibFuzzer
-3 - Eclipser
-4 - HonggFuzz
+> RcppDeepStateTools::deepstate_pkg_create_<Fuzzer>(path)
 ```
+You choose from the following Fuzzers:
+
+- AFL
+- HonggFuzz
+- Eclipser
+- LibFuzzer
 
 Here choosing any of the options - will do the following:
 1. Install the fuzzer.
@@ -54,13 +55,7 @@ AFL has compile-time instrumentation which means the program inserts the necessa
 If we want to test the package using AFL we have to choose option 1 :
 
 ```shell
-> RcppDeepStateTools::deepstate_compile_tools(path)
-Please choose an option to select the Fuzzer:
-1 - AFL
-2 - LibFuzzer
-3 - Eclipser
-4 - HonggFuzz
-1
+> RcppDeepStateTools::deepstate_pkg_create_AFL(path)
 [1] "rm -f *.o && make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/AFL.Makefile"
 /home/akhila/.RcppDeepState/afl-2.52b/afl-clang++ -g -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.afl.o -c
 afl-cc 2.52b by <lcamtuf@google.com>
@@ -223,13 +218,7 @@ When we test the package using hongg fuzz the output looks something like this:
 First runs the make file and then executes the testharness:
 
 ```shell
-> RcppDeepStateTools::deepstate_compile_tools(path)
-Please choose an option to select the Fuzzer:
-1 - AFL
-2 - LibFuzzer
-3 - Eclipser
-4 - HonggFuzz
-4
+> RcppDeepStateTools::deepstate_pkg_create_HonggFuzz(path)
 [1] "rm -f *.o && make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Hongg.Makefile"
 /home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -c
 /home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include -I/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -I/home/akhila/.RcppDeepState/deepstate-master/src/include -L/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -Wl,-rpath=/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -L/usr/share/R/lib -Wl,-rpath=/usr/share/R/lib -L/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -Wl,-rpath=/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -lR -lRInside -ldeepstate_HFUZZ -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/*.cpp
@@ -277,13 +266,7 @@ zzer_pid:6030)
 Eclipser is a binary-based fuzz testing tool that uses lightweight instrumentation. This is also known as coverage based fuzzer that allows deepstate to quickly detect harder to reach bugs by covering interesting paths.
 
 ```shell
-> deepstate_compile_tools(path)
-Please choose an option to select the Fuzzer:
-1 - AFL
-2 - LibFuzzer
-3 - Eclipser
-4 - HonggFuzz
-3
+> RcppDeepStateTools::deepstate_pkg_create_Eclipser(path)
 [1] "rm -f *.o && make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Eclipser.Makefile"
 cd /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && deepstate-eclipser ./rcpp_read_out_of_bound_DeepState_TestHarness -o eclipser_out --timeout 30 
 INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
@@ -318,3 +301,62 @@ INFO:deepstate.executors.fuzz.eclipser: Performing decoding on test cases and cr
 ```
 
 The Eclipser gives some information about crashes, fuzzer id, and Unix time at which fuzzer started. The output folder of Eclipser looks similar to the output folder of Honggfuzz and AFL.
+
+
+**LibFuzzer:**
+
+
+LibFuzzer is a coverage driven fuzzing engine.The code coverage information for libFuzzer is provided by LLVM's Sanitizer instrumentation.
+
+```shell
+> RcppDeepStateTools::deepstate_pkg_create_LibFuzzer(path)
+[1] "rm -f *.o && make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzz.Makefile"
+cd /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && ./rcpp_read_out_of_bound_DeepState_TestHarness_LF --fuzz --fuzz_save_passing 
+DEBUG: INFO: libFuzzer ignores flags that start with '--'
+
+DEBUG: INFO: Seed: 3628062210
+
+DEBUG: INFO: Loaded 1 modules   (1690 inline 8-bit counters): 
+DEBUG: 1690 [604720, 604dba), 
+DEBUG: 
+
+DEBUG: INFO: Loaded 1 PC tables (1690 PCs): 
+DEBUG: 1690 [5b41b8,5bab58), 
+DEBUG: 
+
+DEBUG: INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 4096 bytes
+
+input starts
+rbound values: 0
+input ends
+input starts
+rbound values: 167772160
+input ends
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==1642018==ERROR: AddressSanitizer: SEGV on unknown address 0x614028000240 (pc 0x00000059213b bp 0x7ffe444b33d0 sp 0x7ffe444b33a0 T0)
+==1642018==The signal is caused by a READ memory access.
+    #0 0x59213b in rcpp_read_out_of_bound(int) /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/read_out_of_bound.cpp:7:10
+    #1 0x55e412 in DeepState_Test_testSAN_deepstate_test_rcpp_read_out_of_bound_test() /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp:21:5
+    #2 0x556cd8 in DeepState_Run_testSAN_deepstate_test_rcpp_read_out_of_bound_test() /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp:10:1
+    #3 0x56f6e7 in DeepState_RunTestNoFork (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x56f6e7)
+    #4 0x56f4fa in LLVMFuzzerTestOneInput (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x56f4fa)
+    #5 0x45f131 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x45f131)
+    #6 0x45e875 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long, bool, fuzzer::InputInfo*, bool*) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x45e875)
+    #7 0x461051 in fuzzer::Fuzzer::ReadAndExecuteSeedCorpora(std::__Fuzzer::vector<fuzzer::SizedFile, fuzzer::fuzzer_allocator<fuzzer::SizedFile> >&) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x461051)
+    #8 0x4614f9 in fuzzer::Fuzzer::Loop(std::__Fuzzer::vector<fuzzer::SizedFile, fuzzer::fuzzer_allocator<fuzzer::SizedFile> >&) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x4614f9)
+    #9 0x4501ce in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x4501ce)
+    #10 0x479012 in main (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x479012)
+    #11 0x7f7b02b210b2 in __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6+0x270b2)
+    #12 0x424f6d in _start (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x424f6d)
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/read_out_of_bound.cpp:7:10 in rcpp_read_out_of_bound(int)
+==1642018==ABORTING
+make: *** [/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzz.Makefile:5: /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzzer_rcpp_read_out_of_bound_log] Error 1
+```
+
+The Libfuzzer can detect an invalid read memory access with the address sanitizer instrumentation in the above TestHarness. Once there is an error/bug in the memory the fuzzer aborts with a trace of the issues.
+
+Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
+This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/).
