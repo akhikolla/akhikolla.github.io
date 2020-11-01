@@ -1,0 +1,386 @@
+I"ùÅ<p>As a part of <a href="https://docs.google.com/document/d/15z2diPTJ3MTLe3H9WfHNAdzkn1bYIsLJ6_tpGWRqQBU/edit">R consortium fuzz testing proposal</a>, we are creating a simple prototype on how to extract the valid inputs for a function from the RcppTestPackage and test it with Valgrind. We also test the <code class="language-plaintext highlighter-rouge">test harness</code> of the same rcpp method by passing DeepState‚Äôs randomized inputs and see if Valgrind can detect any errors for those inputs.</p>
+
+<p>To test an rcpp function, we need to extract the valid inputs first. Usually, not all the rcpp methods have their code documented with well-written examples. Instead, we can look for the rcpp function calls in the package and obtain the inputs. These rcpp function calls are found mostly in another R function. The first we need to do is identify those R functions and check for an rcpp function call and save those inputs.</p>
+
+<p>Here we will perform all our tests and analysis on the Rcpp package <code class="language-plaintext highlighter-rouge">ambient</code>. For example, consider the rcpp function - <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code> we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples. But when I refer to the man pages there is no documentation for the rcpp function <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code>. In this case, we need to follow the below steps to get the inputs.</p>
+
+<p><strong>Identify the function call in the package:</strong></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre>akhila@akhila-VirtualBox:~/R/packages/ambient<span class="nv">$ </span><span class="nb">grep</span> <span class="nt">-Rw</span> <span class="nt">-e</span> <span class="s2">"gen_cubic2d_c"</span>
+Binary file src/RcppExports.o matches
+src/cubic.cpp:NumericVector gen_cubic2d_c<span class="o">(</span>NumericVector x, NumericVector y, double freq, int seed<span class="o">)</span> <span class="o">{</span>
+Binary file src/cubic.o matches
+src/RcppExports.cpp:// gen_cubic2d_c
+src/RcppExports.cpp:NumericVector gen_cubic2d_c<span class="o">(</span>NumericVector x, NumericVector y, double freq, int seed<span class="o">)</span><span class="p">;</span>
+src/RcppExports.cpp:    rcpp_result_gen <span class="o">=</span> Rcpp::wrap<span class="o">(</span>gen_cubic2d_c<span class="o">(</span>x, y, freq, seed<span class="o">))</span><span class="p">;</span>
+R/noise-cubic.R:    gen_cubic2d_c<span class="o">(</span>dims<span class="nv">$x</span>, dims<span class="nv">$y</span>, frequency, seed<span class="o">)</span>
+R/RcppExports.R:gen_cubic2d_c &lt;- <span class="k">function</span><span class="o">(</span>x, y, freq, seed<span class="o">)</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>From above trace we can see that <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code> is found in RcppExports.cpp, RcppExports.R and src/cubic.cpp. But the function call to <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code> with valid inputs can be found in R/noise-cubic.R.</p>
+
+<p><strong>Identify the inputs passed:</strong></p>
+
+<p>Now, let‚Äôs check the R/noise-cubic.R and find the gen_cubic2d_c function call.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="n">gen_cubic</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="k">function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">...</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="n">dims</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">check_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w">
+  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">is.null</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">random_seed</span><span class="p">()</span><span class="w">
+  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">is.null</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">gen_cubic2d_c</span><span class="p">(</span><span class="n">dims</span><span class="o">$</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">dims</span><span class="o">$</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="p">,</span><span class="w"> </span><span class="n">seed</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="n">gen_cubic3d_c</span><span class="p">(</span><span class="n">dims</span><span class="o">$</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">dims</span><span class="o">$</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">dims</span><span class="o">$</span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">frequency</span><span class="p">,</span><span class="w"> </span><span class="n">seed</span><span class="p">)</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>From this, we can understand that a call to <code class="language-plaintext highlighter-rouge">gen_cubic</code> is to be made to invoke <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code>. There is documentation available for the function gen_cubic in man/noise_cubic.R.</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="n">g.seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="n">length.out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1000</span><span class="p">)</span><span class="w">
+</span><span class="n">grid</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">long_grid</span><span class="p">(</span><span class="n">g.seq</span><span class="p">,</span><span class="w"> </span><span class="n">g.seq</span><span class="p">)</span><span class="w">
+</span><span class="n">grid</span><span class="o">$</span><span class="n">noise</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">gen_cubic</span><span class="p">(</span><span class="n">grid</span><span class="o">$</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">grid</span><span class="o">$</span><span class="n">y</span><span class="p">)</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>Now make a call to gen_cubic() and store the inputs into a list. To make a call to gen_cubic() in noise_cubic.Rd we need to run the following script:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre>akhila@akhila-VirtualBox:~/R/packages/ambient<span class="nv">$R</span> vanilla <span class="nt">-e</span> <span class="s1">'example("noise_cubic",package="ambient")'</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>This will open the R session and will run the gen_cubic() and when these values are printed to the console the inputs are as follows:</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="n">List</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="m">4</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">x</span><span class="w">   </span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">1000000</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="n">...</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">y</span><span class="w">   </span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">1000000</span><span class="p">]</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1.01</span><span class="w"> </span><span class="m">1.02</span><span class="w"> </span><span class="m">1.03</span><span class="w"> </span><span class="m">1.04</span><span class="w"> </span><span class="n">...</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">freq</span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="m">1</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">seed</span><span class="o">:</span><span class="w"> </span><span class="n">int</span><span class="w"> </span><span class="m">880336483</span><span class="w">
+
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>These stored inputs are the real and valid arguments to the function <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code>. The Rscript to make a call to the function with the above inputs looks like this.</p>
+
+<p><strong>ambient-test.R</strong></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="n">g.seq</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">seq</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="n">length.out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1000</span><span class="p">)</span><span class="w">
+</span><span class="n">grid</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ambient</span><span class="o">::</span><span class="n">long_grid</span><span class="p">(</span><span class="n">g.seq</span><span class="p">,</span><span class="w"> </span><span class="n">g.seq</span><span class="p">)</span><span class="w">
+</span><span class="n">valid.args</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="w">
+  </span><span class="n">x</span><span class="o">=</span><span class="n">grid</span><span class="o">$</span><span class="n">x</span><span class="p">,</span><span class="w">
+  </span><span class="n">y</span><span class="o">=</span><span class="n">grid</span><span class="o">$</span><span class="n">y</span><span class="p">,</span><span class="w">
+  </span><span class="n">freq</span><span class="o">=</span><span class="m">1</span><span class="p">,</span><span class="w">
+  </span><span class="n">seed</span><span class="o">=</span><span class="m">880336483L</span><span class="p">)</span><span class="w">
+</span><span class="n">str</span><span class="p">(</span><span class="n">valid.args</span><span class="p">)</span><span class="w">
+</span><span class="n">valid.result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">do.call</span><span class="p">(</span><span class="n">ambient</span><span class="o">:::</span><span class="n">cubic_2d_c</span><span class="p">,</span><span class="w"> </span><span class="n">worklist</span><span class="p">)</span><span class="w">
+</span><span class="n">str</span><span class="p">(</span><span class="n">valid.result</span><span class="p">)</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p><strong>Output</strong></p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+</pre></td><td class="rouge-code"><pre>akhila@akhila-VirtualBox:~/R/packages/ambient<span class="nv">$ </span>R <span class="nt">-d</span> valgrind <span class="nt">--vanilla</span> &lt; ambient-test.R
+<span class="o">==</span><span class="nv">6585</span><span class="o">==</span> Memcheck, a memory error detector
+<span class="o">==</span><span class="nv">6585</span><span class="o">==</span> Copyright <span class="o">(</span>C<span class="o">)</span> 2002-2017, and GNU GPL<span class="s1">'d, by Julian Seward et al.
+==6585== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==6585== Command: /home/akhila/lib/R/bin/exec/R --vanilla
+==6585== 
+
+R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '</span>license<span class="o">()</span><span class="s1">' or '</span>licence<span class="o">()</span><span class="s1">' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '</span>contributors<span class="o">()</span><span class="s1">' for more information and
+'</span>citation<span class="o">()</span><span class="s1">' on how to cite R or R packages in publications.
+
+Type '</span>demo<span class="o">()</span><span class="s1">' for some demos, '</span><span class="nb">help</span><span class="o">()</span><span class="s1">' for on-line help, or
+'</span>help.start<span class="o">()</span><span class="s1">' for an HTML browser interface to help.
+Type '</span>q<span class="o">()</span><span class="s1">' to quit R.
+
+&gt; g.seq &lt;- seq(1, 10, length.out = 1000)
+&gt; grid &lt;- ambient::long_grid(g.seq, g.seq)
+&gt; valid.args &lt;- list(
++   x=grid$x,
++   y=grid$y,
++   freq=1,
++   seed=880336483L)
+&gt; str(valid.args)
+List of 4
+ $ x   : num [1:1000000] 1 1 1 1 1 1 1 1 1 1 ...
+ $ y   : num [1:1000000] 1 1.01 1.02 1.03 1.04 ...
+ $ freq: num 1
+ $ seed: int 880336483
+&gt; valid.result &lt;- do.call(ambient:::gen_cubic2d_c, valid.args)
+&gt; str(valid.result)
+ num [1:1000000] -0.228 -0.227 -0.226 -0.224 -0.223 ...
+&gt; 
+==6585== 
+==6585== HEAP SUMMARY:
+==6585==     in use at exit: 76,529,943 bytes in 10,702 blocks
+==6585==   total heap usage: 30,343 allocs, 19,641 frees, 115,713,891 bytes allocated
+==6585== 
+==6585== LEAK SUMMARY:
+==6585==    definitely lost: 0 bytes in 0 blocks
+==6585==    indirectly lost: 0 bytes in 0 blocks
+==6585==      possibly lost: 0 bytes in 0 blocks
+==6585==    still reachable: 76,529,943 bytes in 10,702 blocks
+==6585==                       of which reachable via heuristic:
+==6585==                         newarray           : 4,264 bytes in 1 blocks
+==6585==         suppressed: 0 bytes in 0 blocks
+==6585== Rerun with --leak-check=full to see details of leaked memory
+==6585== 
+==6585== For counts of detected and suppressed errors, rerun with: -v
+==6585== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>For these valid inputs we don‚Äôt see any Valgrind memory leaks or bugs in the code but when we executed the same code with DeepState generated randomized inputs we are able to detect bugs in the rcpp function.</p>
+
+<p>Inputs generated by DeepState for the function <code class="language-plaintext highlighter-rouge">gen_cubic2d_c</code>:</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="o">&gt;</span><span class="w"> </span><span class="n">str</span><span class="p">(</span><span class="n">deepstate.args</span><span class="p">)</span><span class="w">
+</span><span class="n">List</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="m">4</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">x</span><span class="w">   </span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">9</span><span class="p">]</span><span class="w"> </span><span class="kc">Inf</span><span class="w"> </span><span class="kc">Inf</span><span class="w"> </span><span class="kc">NaN</span><span class="w"> </span><span class="m">-2.15e-100</span><span class="w"> </span><span class="kc">NaN</span><span class="w"> </span><span class="n">...</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">y</span><span class="w">   </span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">7</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="kc">Inf</span><span class="w"> </span><span class="kc">NaN</span><span class="w"> </span><span class="kc">NaN</span><span class="w"> </span><span class="m">-1.20e+297</span><span class="w"> </span><span class="m">-4.39e-67</span><span class="w"> </span><span class="n">...</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">freq</span><span class="o">:</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="m">2.23e-63</span><span class="w">
+ </span><span class="o">$</span><span class="w"> </span><span class="n">seed</span><span class="o">:</span><span class="w"> </span><span class="n">int</span><span class="w"> </span><span class="m">777429942</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p><strong>ambient-test.R</strong></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="n">deepstate.args</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="w">
+  </span><span class="n">x</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="kc">Inf</span><span class="p">,</span><span class="w"> </span><span class="kc">Inf</span><span class="p">,</span><span class="w"> </span><span class="kc">NaN</span><span class="p">,</span><span class="w"> </span><span class="m">-2.1518e-100</span><span class="p">,</span><span class="w"> </span><span class="kc">NaN</span><span class="p">,</span><span class="w"> </span><span class="m">-2.9298e+100</span><span class="p">,</span><span class="w"> </span><span class="kc">NaN</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="kc">Inf</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">),</span><span class="w">
+  </span><span class="n">y</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="o">-</span><span class="kc">Inf</span><span class="p">,</span><span class="w"> </span><span class="kc">NaN</span><span class="p">,</span><span class="w"> </span><span class="kc">NaN</span><span class="p">,</span><span class="w"> </span><span class="m">-1.20158e+297</span><span class="p">,</span><span class="w"> </span><span class="m">-4.39091e-67</span><span class="p">,</span><span class="w"> </span><span class="kc">Inf</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">),</span><span class="n">freq</span><span class="o">=</span><span class="m">2.23269e-63</span><span class="p">,</span><span class="w">
+  </span><span class="n">seed</span><span class="o">=</span><span class="m">777429942L</span><span class="p">)</span><span class="w">
+</span><span class="n">str</span><span class="p">(</span><span class="n">deepstate.args</span><span class="p">)</span><span class="w">
+</span><span class="n">deepstate.result</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">do.call</span><span class="p">(</span><span class="n">ambient</span><span class="o">:::</span><span class="n">gen_cubic2d_c</span><span class="p">,</span><span class="w"> </span><span class="n">deepstate.args</span><span class="p">)</span><span class="w">
+</span><span class="n">str</span><span class="p">(</span><span class="n">deepstate.result</span><span class="p">)</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>When we add the below code to ambient-test.R and run it with valgrind we can see the following Valgrind error trace.</p>
+
+<p><strong>Output</strong></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+</pre></td><td class="rouge-code"><pre><span class="o">==</span><span class="nv">6224</span><span class="o">==</span> Invalid <span class="nb">read </span>of size 8
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    at 0x112E6679: gen_cubic2d_c<span class="o">(</span>Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, double, int<span class="o">)</span> <span class="o">(</span>cubic.cpp:85<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x112D930A: _ambient_gen_cubic2d_c <span class="o">(</span>RcppExports.cpp:59<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F3B953: R_doDotCall <span class="o">(</span>dotcode.c:607<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F3BE85: do_dotcall <span class="o">(</span>dotcode.c:1280<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F79765: bcEval <span class="o">(</span>eval.c:7099<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F85D4F: Rf_eval <span class="o">(</span>eval.c:723<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F87B6E: R_execClosure <span class="o">(</span>eval.c:1888<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F88936: Rf_applyClosure <span class="o">(</span>eval.c:1814<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F85F22: Rf_eval <span class="o">(</span>eval.c:846<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F08C0C: do_docall <span class="o">(</span>coerce.c:2704<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F79765: bcEval <span class="o">(</span>eval.c:7099<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F85D4F: Rf_eval <span class="o">(</span>eval.c:723<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>  Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc<span class="sb">`</span>d
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    at 0x4C2FB0F: malloc <span class="o">(</span><span class="k">in</span> /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4FC4B02: GetNewPage <span class="o">(</span>memory.c:946<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4FC6B41: Rf_allocVector3 <span class="o">(</span>memory.c:2784<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x5027381: Rf_allocVector <span class="o">(</span>Rinlinedfuns.h:593<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x5027381: ReadItem <span class="o">(</span>serialize.c:1932<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x502852F: ReadBCConsts <span class="o">(</span>serialize.c:2101<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x502852F: ReadBC1 <span class="o">(</span>serialize.c:2118<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x50277EC: ReadBC <span class="o">(</span>serialize.c:2129<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x50277EC: ReadItem <span class="o">(</span>serialize.c:1966<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x5026B39: ReadItem <span class="o">(</span>serialize.c:1873<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x5027596: ReadItem <span class="o">(</span>serialize.c:1961<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x50288BD: R_Unserialize <span class="o">(</span>serialize.c:2181<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x5029C59: R_unserialize <span class="o">(</span>serialize.c:2892<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x502A090: do_lazyLoadDBfetch <span class="o">(</span>serialize.c:3196<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    by 0x4F862D5: Rf_eval <span class="o">(</span>eval.c:830<span class="o">)</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> 
+<span class="o">&gt;</span> str<span class="o">(</span>deepstate.result<span class="o">)</span>
+ num <span class="o">[</span>1:9] NaN NaN NaN NaN NaN ...
+<span class="o">&gt;</span> 
+<span class="o">&gt;</span> 
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> 
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> HEAP SUMMARY:
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>     <span class="k">in </span>use at <span class="nb">exit</span>: 77,286,802 bytes <span class="k">in </span>10,884 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>   total heap usage: 30,258 allocs, 19,374 frees, 116,140,760 bytes allocated
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> 
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> LEAK SUMMARY:
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    definitely lost: 0 bytes <span class="k">in </span>0 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    indirectly lost: 0 bytes <span class="k">in </span>0 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>      possibly lost: 0 bytes <span class="k">in </span>0 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>    still reachable: 77,286,802 bytes <span class="k">in </span>10,884 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>                       of which reachable via heuristic:
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>                         newarray           : 4,264 bytes <span class="k">in </span>1 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span>         suppressed: 0 bytes <span class="k">in </span>0 blocks
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> Rerun with <span class="nt">--leak-check</span><span class="o">=</span>full to see details of leaked memory
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> 
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> For counts of detected and suppressed errors, rerun with: <span class="nt">-v</span>
+<span class="o">==</span><span class="nv">6224</span><span class="o">==</span> ERROR SUMMARY: 1 errors from 1 contexts <span class="o">(</span>suppressed: 75 from 1<span class="o">)</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>We see that an InvalidRead error is reported in the program. This happens when the process tries to access the memory location that is outside of the available memory locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.</p>
+
+<p>Thanks to <a href="https://tdhock.github.io/blog/">Dr.Toby Dylan Hocking</a> for his support on the project.
+This blog is kindly contributed to <a href="https://www.r-bloggers.com/">R-bloggers</a>.</p>
+
+:ET

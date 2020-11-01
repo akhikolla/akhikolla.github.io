@@ -2,7 +2,7 @@
 title: Prototyping Realistic Input Generation - Exported Functions 
 author: Akhila Chowdary Kolla
 categories: [Proposal]
-tags: [Prototyping,ValgrindTest,ExportedFunctions]
+tags: [Prototyping,ValgrindTest,ExportedFunctions,R]
 math: true
 ---
 
@@ -328,8 +328,7 @@ IntegerVector c_x=table(x), c_y=table(y), c_xy=table(x+1000*y);
 If we observe the IntegerVector c_xy, it is a combination of values from NumericVectors x and y. The vector c_xy is uninitialized when it uses values like NaN, NA from x,y.  The creation of vector c_xy fails. Although the creation c_xy failed, we are trying to access it. Valgrind starts complaining about the issue by throwing an error message `Conditional jump or move depends on the uninitialized value(s)`.
 In the documentation of `mi`, we see that x and y should be of equal length. An easy fix could be to check for the size of vectors x and y. Another option could be checking or restricting the acceptance of values like NaN, NA onto the vectors x,y, and also the proc value
 
-Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
-This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
+Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project. This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
 
 

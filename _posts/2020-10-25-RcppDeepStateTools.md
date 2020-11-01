@@ -2,7 +2,7 @@
 title: RcppDeepStateTools 
 author: Akhila Chowdary Kolla
 categories: [Tools]
-tags: [RcppDeepStateTools,Tools,AFL,libfuzzer,honggfuzz,Eclipser,Angora]
+tags: [RcppDeepStateTools,Tools,AFL,libfuzzer,honggfuzz,Eclipser,Angora,R]
 math: true
 ---
 
@@ -358,5 +358,4 @@ make: *** [/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs
 
 The Libfuzzer can detect an invalid read memory access with the address sanitizer instrumentation in the above TestHarness. Once there is an error/bug in the memory the fuzzer aborts with a trace of the issues.
 
-Thanks to [Dr. Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
-This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/).
+Thanks to `Dr.Toby Dylan Hocking` for his support on this project. This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 

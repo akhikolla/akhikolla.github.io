@@ -1,0 +1,571 @@
+I"q�<p>As a part of <a href="https://docs.google.com/document/d/15z2diPTJ3MTLe3H9WfHNAdzkn1bYIsLJ6_tpGWRqQBU/edit">R consortium fuzz testing proposal</a>, we are creating a simple prototype on how to extract the valid inputs for a function from the RcppTestPackage and test it with Valgrind. We also test the <code class="language-plaintext highlighter-rouge">test harness</code> of the same rcpp method by passing DeepState’s randomized inputs and see if Valgrind can detect any errors for those inputs.</p>
+
+<p>In the <a href="https://akhikolla.github.io./posts/Prototyping-testharness/">previous blog post</a> we learned to extract the valid inputs for functions and test the functions with both valid inputs and DeepState generated random inputs and check for Valgrind errors. In this blog post, we will go one step further and try to find errors in the exported functions in the package.</p>
+
+<p>Here we will perform all our tests and analysis on the Rcpp package <code class="language-plaintext highlighter-rouge">BNSL</code>. For example, consider the rcpp function - <code class="language-plaintext highlighter-rouge">BNSL::mi</code> we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples.</p>
+
+<p><strong>find the valid examples:</strong></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="n">n</span><span class="o">=</span><span class="m">100</span><span class="w">
+
+</span><span class="n">x</span><span class="o">=</span><span class="n">rbinom</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">0.5</span><span class="p">);</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">rbinom</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">0.5</span><span class="p">);</span><span class="w"> </span><span class="n">mi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="w">
+
+</span><span class="n">z</span><span class="o">=</span><span class="n">rbinom</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="m">1</span><span class="p">,</span><span class="m">0.1</span><span class="p">);</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">z</span><span class="p">)</span><span class="o">%%</span><span class="m">2</span><span class="w">
+
+</span><span class="n">mi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">proc</span><span class="o">=</span><span class="m">1</span><span class="p">);</span><span class="w"> </span><span class="n">mi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="m">2</span><span class="p">)</span><span class="w"> 
+
+</span><span class="n">x</span><span class="o">=</span><span class="n">rnorm</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="n">rnorm</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="n">mi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">proc</span><span class="o">=</span><span class="m">10</span><span class="p">)</span><span class="w">
+
+</span><span class="n">x</span><span class="o">=</span><span class="n">rnorm</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="n">z</span><span class="o">=</span><span class="n">rnorm</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="n">y</span><span class="o">=</span><span class="m">0.9</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="nf">sqrt</span><span class="p">(</span><span class="m">1-0.9</span><span class="o">^</span><span class="m">2</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">;</span><span class="w"> </span><span class="n">mi</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">proc</span><span class="o">=</span><span class="m">10</span><span class="p">)</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+
+<p><strong>Run the valid inputs:</strong></p>
+
+<p>Now, let’s run the  examples in R/mi.R</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+</pre></td><td class="rouge-code"><pre>akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL<span class="nv">$ </span>R vanilla <span class="nt">-e</span> <span class="s1">'example("mi",package="BNSL")'</span>
+ARGUMENT <span class="s1">'vanilla'</span> __ignored__
+
+
+R version 3.6.3 <span class="o">(</span>2020-02-29<span class="o">)</span> <span class="nt">--</span> <span class="s2">"Holding the Windsock"</span>
+Copyright <span class="o">(</span>C<span class="o">)</span> 2020 The R Foundation <span class="k">for </span>Statistical Computing
+Platform: x86_64-pc-linux-gnu <span class="o">(</span>64-bit<span class="o">)</span>
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type <span class="s1">'license()'</span> or <span class="s1">'licence()'</span> <span class="k">for </span>distribution details.
+
+  Natural language support but running <span class="k">in </span>an English locale
+
+R is a collaborative project with many contributors.
+Type <span class="s1">'contributors()'</span> <span class="k">for </span>more information and
+<span class="s1">'citation()'</span> on how to cite R or R packages <span class="k">in </span>publications.
+
+Type <span class="s1">'demo()'</span> <span class="k">for </span>some demos, <span class="s1">'help()'</span> <span class="k">for </span>on-line <span class="nb">help</span>, or
+<span class="s1">'help.start()'</span> <span class="k">for </span>an HTML browser interface to help.
+Type <span class="s1">'q()'</span> to quit R.
+
+<span class="o">&gt;</span> example<span class="o">(</span><span class="s2">"mi"</span>,package<span class="o">=</span><span class="s2">"BNSL"</span><span class="o">)</span>
+Loading required package: bnlearn
+Loading required package: igraph
+
+Attaching package: ‘igraph’
+mi&gt; <span class="nv">n</span><span class="o">=</span>100
+
+mi&gt; <span class="nv">x</span><span class="o">=</span>rbinom<span class="o">(</span>n,1,0.5<span class="o">)</span><span class="p">;</span> <span class="nv">y</span><span class="o">=</span>rbinom<span class="o">(</span>n,1,0.5<span class="o">)</span><span class="p">;</span> mi<span class="o">(</span>x,y<span class="o">)</span>
+<span class="o">[</span>1] 0
+
+mi&gt; <span class="nv">z</span><span class="o">=</span>rbinom<span class="o">(</span>n,1,0.1<span class="o">)</span><span class="p">;</span> <span class="nv">y</span><span class="o">=(</span>x+z<span class="o">)</span>
+
+mi&gt; mi<span class="o">(</span>x,y<span class="o">)</span><span class="p">;</span> mi<span class="o">(</span>x,y,proc<span class="o">=</span>1<span class="o">)</span><span class="p">;</span> mi<span class="o">(</span>x,y,2<span class="o">)</span> 
+<span class="o">[</span>1] 0.4333487
+<span class="o">[</span>1] 0.4197742
+<span class="o">[</span>1] 0.4391413
+
+mi&gt; <span class="nv">x</span><span class="o">=</span>rnorm<span class="o">(</span>n<span class="o">)</span><span class="p">;</span> <span class="nv">y</span><span class="o">=</span>rnorm<span class="o">(</span>n<span class="o">)</span><span class="p">;</span> mi<span class="o">(</span>x,y,proc<span class="o">=</span>10<span class="o">)</span>
+<span class="o">[</span>1] 0
+
+mi&gt; <span class="nv">x</span><span class="o">=</span>rnorm<span class="o">(</span>n<span class="o">)</span><span class="p">;</span> <span class="nv">z</span><span class="o">=</span>rnorm<span class="o">(</span>n<span class="o">)</span><span class="p">;</span> <span class="nv">y</span><span class="o">=</span>0.9<span class="k">*</span>x+sqrt<span class="o">(</span>1-0.9^2<span class="o">)</span><span class="k">*</span>z<span class="p">;</span> mi<span class="o">(</span>x,y,proc<span class="o">=</span>10<span class="o">)</span>
+<span class="o">[</span>1] 0.4602899
+<span class="o">&gt;</span> 
+<span class="o">&gt;</span> 
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>We find don’t any issues with running the examples on the <code class="language-plaintext highlighter-rouge">mi</code> function. Now let’s try using Valgrind with it and see if we find any issues with the function.</p>
+
+<p><strong>Run function under valgrind:</strong></p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+</pre></td><td class="rouge-code"><pre>akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL<span class="nv">$ </span>R <span class="nt">-d</span> valgrind <span class="nt">--vanilla</span> &lt; mi.R
+<span class="o">==</span><span class="nv">1365578</span><span class="o">==</span> Memcheck, a memory error detector
+<span class="o">==</span><span class="nv">1365578</span><span class="o">==</span> Copyright <span class="o">(</span>C<span class="o">)</span> 2002-2017, and GNU GPL<span class="s1">'d, by Julian Seward et al.
+==1365578== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==1365578== Command: /usr/lib/R/bin/exec/R --vanilla
+==1365578== 
+
+R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '</span>license<span class="o">()</span><span class="s1">' or '</span>licence<span class="o">()</span><span class="s1">' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '</span>contributors<span class="o">()</span><span class="s1">' for more information and
+'</span>citation<span class="o">()</span><span class="s1">' on how to cite R or R packages in publications.
+
+Type '</span>demo<span class="o">()</span><span class="s1">' for some demos, '</span><span class="nb">help</span><span class="o">()</span><span class="s1">' for on-line help, or
+'</span>help.start<span class="o">()</span><span class="s1">' for an HTML browser interface to help.
+Type '</span>q<span class="o">()</span><span class="s1">' to quit R.
+
+&gt; n=100
+&gt; args &lt;- list(
++     x=rnorm(n),
++     y=rnorm(n),
++     proc=10) 
+&gt; result &lt;- do.call(BNSL::mi,args)
+&gt; str(result)
+ num 0
+&gt; 
+==1365578== 
+==1365578== HEAP SUMMARY:
+==1365578==     in use at exit: 59,988,472 bytes in 14,200 blocks
+==1365578==   total heap usage: 56,854 allocs, 42,654 frees, 104,358,740 bytes allocated
+==1365578== 
+==1365578== LEAK SUMMARY:
+==1365578==    definitely lost: 0 bytes in 0 blocks
+==1365578==    indirectly lost: 0 bytes in 0 blocks
+==1365578==      possibly lost: 0 bytes in 0 blocks
+==1365578==    still reachable: 59,988,472 bytes in 14,200 blocks
+==1365578==                       of which reachable via heuristic:
+==1365578==                         newarray           : 4,264 bytes in 1 blocks
+==1365578==         suppressed: 0 bytes in 0 blocks
+==1365578== Rerun with --leak-check=full to see details of leaked memory
+==1365578== 
+==1365578== For lists of detected and suppressed errors, rerun with: -s
+==1365578== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>Running the code under Valgrind didn’t show any bugs or memory leaks. Let’s go one step ahead and try running the function under deepstate generated inputs.</p>
+
+<p>As we know to run code under deepstate:</p>
+
+<ul>
+  <li>Create testharness for the function.</li>
+  <li>Compile the testharness</li>
+  <li>Run the testharness</li>
+  <li>Generate the crash files</li>
+  <li>Check the crash files for inputs that can break the code.</li>
+</ul>
+
+<p>Now store the deepstate inputs that are obtained from the crash files into a list.</p>
+
+<p><strong>mi-test.R</strong></p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre><span class="n">dargs</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="w">
+</span><span class="n">x</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">1.05004e+27</span><span class="p">,</span><span class="m">1.50426e+215</span><span class="p">,</span><span class="m">9.63399e+201</span><span class="p">,</span><span class="m">1.1132e+274</span><span class="p">,</span><span class="m">2.83593e-82</span><span class="p">,</span><span class="m">4.79375e+179</span><span class="p">,</span><span class="m">3.55624e+245</span><span class="p">,</span><span class="m">7.37432e+52</span><span class="p">,</span><span class="m">1.57214e+46</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="m">9.01655e+209</span><span class="p">,</span><span class="m">-6.39404e+163</span><span class="p">,</span><span class="m">1.52852e-99</span><span class="p">,</span><span class="m">3.95231e+100</span><span class="p">,</span><span class="m">2.77922e+44</span><span class="p">,</span><span class="m">1.64826e-168</span><span class="p">,</span><span class="m">2.11394e+53</span><span class="p">,</span><span class="m">1.57803e+156</span><span class="p">,</span><span class="m">-1.32126e+233</span><span class="p">,</span><span class="m">-6.12072e+299</span><span class="p">,</span><span class="m">3.46716e+09</span><span class="p">,</span><span class="m">2.02395e-62</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="m">4.63683e-299</span><span class="p">,</span><span class="m">-1.94216e+211</span><span class="p">,</span><span class="m">3.90791e-115</span><span class="p">,</span><span class="m">-1.34423e+132</span><span class="p">,</span><span class="m">-1.94344e+19</span><span class="p">,</span><span class="m">3.26647e-129</span><span class="p">,</span><span class="m">-1.78086e+15</span><span class="p">,</span><span class="m">6.11934e-118</span><span class="p">,</span><span class="m">-7.07064e+298</span><span class="p">,</span><span class="m">-1.36403e-174</span><span class="p">,</span><span class="m">-9.23416e+298</span><span class="p">,</span><span class="m">-3.07213e+235</span><span class="p">,</span><span class="m">-5.93601e-265</span><span class="p">,</span><span class="m">-1.83547e-282</span><span class="p">,</span><span class="m">-1.76343e-119</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="m">-1.55076e+22</span><span class="p">,</span><span class="m">-1.08499e+112</span><span class="p">,</span><span class="m">-9.44741e+78</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="m">-5.77067e+285</span><span class="p">,</span><span class="m">-2.17325e+240</span><span class="p">,</span><span class="m">-0.00164493</span><span class="p">,</span><span class="m">2.11009e+165</span><span class="p">,</span><span class="m">-1.38652e-69</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="m">6.42513e-282</span><span class="p">,</span><span class="m">-1.1697e-54</span><span class="p">,</span><span class="m">-180216</span><span class="p">,</span><span class="m">-2.13757e-104</span><span class="p">,</span><span class="m">-3.50357e+180</span><span class="p">,</span><span class="m">3.47957e+87</span><span class="p">,</span><span class="m">-2.97102e+10</span><span class="p">,</span><span class="m">1.27176e+11</span><span class="p">,</span><span class="m">-1.9436e+25</span><span class="p">,</span><span class="m">3.67334e-276</span><span class="p">,</span><span class="m">2.27839e+231</span><span class="p">,</span><span class="m">8.11476e+61</span><span class="p">,</span><span class="m">7.118e+228</span><span class="p">,</span><span class="m">-4.51193e-132</span><span class="p">,</span><span class="m">-1.34696e+22</span><span class="p">,</span><span class="m">-2.10614e-19</span><span class="p">,</span><span class="m">-6.13223e-133</span><span class="p">,</span><span class="m">-1.5923e+294</span><span class="p">,</span><span class="m">-4.27302e-105</span><span class="p">,</span><span class="m">4.78741e-108</span><span class="p">,</span><span class="m">0</span><span class="p">),</span><span class="w">
+</span><span class="n">y</span><span class="o">=</span><span class="nf">c</span><span class="p">(</span><span class="m">3.89587e+273</span><span class="p">,</span><span class="m">-8.19642e+21</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="kc">NaN</span><span class="p">,</span><span class="kc">NaN</span><span class="p">),</span><span class="w">
+</span><span class="n">proc</span><span class="o">=</span><span class="m">-784179594</span><span class="p">)</span><span class="w">
+ 
+</span><span class="n">dresult</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">do.call</span><span class="p">(</span><span class="n">BNSL</span><span class="o">::</span><span class="n">mi</span><span class="p">,</span><span class="n">dargs</span><span class="p">)</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>Run the mi-test.R file which makes a call to <code class="language-plaintext highlighter-rouge">mi()</code></p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL<span class="nv">$ </span>R <span class="nt">-d</span> valgrind <span class="nt">--vanilla</span> &lt; mi-test.R
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>This will open the R session and will run the mi() with the deepstate inputs and the output is as follows:</p>
+
+<p><strong>Output</strong></p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+</pre></td><td class="rouge-code"><pre>akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL<span class="nv">$ </span>R <span class="nt">-d</span> valgrind <span class="nt">--vanilla</span> &lt; mi.R
+<span class="o">==</span><span class="nv">1365599</span><span class="o">==</span> Memcheck, a memory error detector
+<span class="o">==</span><span class="nv">1365599</span><span class="o">==</span> Copyright <span class="o">(</span>C<span class="o">)</span> 2002-2017, and GNU GPL<span class="s1">'d, by Julian Seward et al.
+==1365599== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==1365599== Command: /usr/lib/R/bin/exec/R --vanilla
+==1365599== 
+
+R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '</span>license<span class="o">()</span><span class="s1">' or '</span>licence<span class="o">()</span><span class="s1">' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '</span>contributors<span class="o">()</span><span class="s1">' for more information and
+'</span>citation<span class="o">()</span><span class="s1">' on how to cite R or R packages in publications.
+
+Type '</span>demo<span class="o">()</span><span class="s1">' for some demos, '</span><span class="nb">help</span><span class="o">()</span><span class="s1">' for on-line help, or
+'</span>help.start<span class="o">()</span><span class="s1">' for an HTML browser interface to help.
+Type '</span>q<span class="o">()</span><span class="s1">' to quit R.
+
+&gt; dargs &lt;- list(
++ x=c(1.05004e+27,1.50426e+215,9.63399e+201,1.1132e+274,2.83593e-82,4.79375e+179,3.55624e+245,7.37432e+52,1.57214e+46,NaN,9.01655e+209,-6.39404e+163,1.52852e-99,3.95231e+100,2.77922e+44,1.64826e-168,2.11394e+53,1.57803e+156,-1.32126e+233,-6.12072e+299,3.46716e+09,2.02395e-62,NaN,4.63683e-299,-1.94216e+211,3.90791e-115,-1.34423e+132,-1.94344e+19,3.26647e-129,-1.78086e+15,6.11934e-118,-7.07064e+298,-1.36403e-174,-9.23416e+298,-3.07213e+235,-5.93601e-265,-1.83547e-282,-1.76343e-119,NaN,-1.55076e+22,-1.08499e+112,-9.44741e+78,NaN,-5.77067e+285,-2.17325e+240,-0.00164493,2.11009e+165,-1.38652e-69,NaN,6.42513e-282,-1.1697e-54,-180216,-2.13757e-104,-3.50357e+180,3.47957e+87,-2.97102e+10,1.27176e+11,-1.9436e+25,3.67334e-276,2.27839e+231,8.11476e+61,7.118e+228,-4.51193e-132,-1.34696e+22,-2.10614e-19,-6.13223e-133,-1.5923e+294,-4.27302e-105,4.78741e-108,0),
++ y=c(3.89587e+273,-8.19642e+21,NaN,NaN,NaN),
++ proc=-784179594)
+&gt; 
+&gt; dresult &lt;- do.call(BNSL::mi,dargs)
+==1365599== Conditional jump or move depends on uninitialised value(s)
+==1365599==    at 0xE2EC89A: operator() (functional_hash.h:249)
+==1365599==    by 0xE2EC89A: _M_hash_code (hashtable_policy.h:1292)
+==1365599==    by 0xE2EC89A: std::__detail::_Map_base&lt;double, std::pair&lt;double const, int&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt;, std::__detail::_Select1st, std::equal_to&lt;double&gt;, std::hash&lt;double&gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&lt;false, false, true&gt;, true&gt;::operator[](double const&amp;) (hashtable_policy.h:695)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::iter_base&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::const_iter_traits&gt;, Rcpp::sugar::CountInserter&lt;std::unordered_map&lt;double, int, std::hash&lt;double&gt;, std::equal_to&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, double&gt; &gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&lt;13, Rcpp::PreserveStorage&gt; Rcpp::table&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;(Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt; const&amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+==1365599== 
+==1365599== Conditional jump or move depends on uninitialised value(s)
+==1365599==    at 0xE2EC8A0: operator() (functional_hash.h:249)
+==1365599==    by 0xE2EC8A0: _M_hash_code (hashtable_policy.h:1292)
+==1365599==    by 0xE2EC8A0: std::__detail::_Map_base&lt;double, std::pair&lt;double const, int&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt;, std::__detail::_Select1st, std::equal_to&lt;double&gt;, std::hash&lt;double&gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&lt;false, false, true&gt;, true&gt;::operator[](double const&amp;) (hashtable_policy.h:695)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::iter_base&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::const_iter_traits&gt;, Rcpp::sugar::CountInserter&lt;std::unordered_map&lt;double, int, std::hash&lt;double&gt;, std::equal_to&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, double&gt; &gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&lt;13, Rcpp::PreserveStorage&gt; Rcpp::table&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;(Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt; const&amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+==1365599== 
+==1365599== Use of uninitialised value of size 8
+==1365599==    at 0xE2EC8B6: _M_find_before_node (hashtable.h:1538)
+==1365599==    by 0xE2EC8B6: _M_find_node (hashtable.h:655)
+==1365599==    by 0xE2EC8B6: std::__detail::_Map_base&lt;double, std::pair&lt;double const, int&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt;, std::__detail::_Select1st, std::equal_to&lt;double&gt;, std::hash&lt;double&gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&lt;false, false, true&gt;, true&gt;::operator[](double const&amp;) (hashtable_policy.h:697)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::iter_base&lt;Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;::const_iter_traits&gt;, Rcpp::sugar::CountInserter&lt;std::unordered_map&lt;double, int, std::hash&lt;double&gt;, std::equal_to&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, double&gt; &gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&lt;13, Rcpp::PreserveStorage&gt; Rcpp::table&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;(Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt; const&amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+(discontinued log)...
+==1365599== Use of uninitialised value of size 8
+==1365599==    at 0x4D39C5F: __mpn_addmul_1 (addmul_1.S:41)
+==1365599==    by 0x1FFEFF761F: ???
+==1365599==    by 0x4D40798: __printf_fp_l (printf_fp.c:532)
+==1365599==    by 0x4D596C7: printf_positional (vfprintf-internal.c:2072)
+==1365599==    by 0x4D5AF4C: __vfprintf_internal (vfprintf-internal.c:1733)
+==1365599==    by 0x4D70119: __vsnprintf_internal (vsnprintf.c:114)
+==1365599==    by 0x4E11E40: __snprintf_chk (snprintf_chk.c:38)
+==1365599==    by 0xE2EB0D1: snprintf (stdio2.h:67)
+==1365599==    by 0xE2EB0D1: coerce_to_string&lt;14&gt; (r_coerce.h:241)
+==1365599==    by 0xE2EB0D1: r_coerce&lt;14, 16&gt; (r_coerce.h:279)
+==1365599==    by 0xE2EB0D1: r_coerce&lt;14, 16&gt; (r_coerce.h:273)
+==1365599==    by 0xE2EB0D1: operator()&lt;std::pair&lt;double const, int&gt; &gt; (table.h:49)
+==1365599==    by 0xE2EB0D1: Rcpp::sugar::Grabber&lt;std::map&lt;double, int, Rcpp::internal::NAComparator&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, 14&gt; std::for_each&lt;std::_Rb_tree_const_iterator&lt;std::pair&lt;double const, int&gt; &gt;, Rcpp::sugar::Grabber&lt;std::map&lt;double, int, Rcpp::internal::NAComparator&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, 14&gt; &gt;(std::_Rb_tree_const_iterator&lt;std::pair&lt;double const, int&gt; &gt;, std::_Rb_tree_const_iterator&lt;std::pair&lt;double const, int&gt; &gt;, Rcpp::sugar::Grabber&lt;std::map&lt;double, int, Rcpp::internal::NAComparator&lt;double&gt;, std::allocator&lt;std::pair&lt;double const, int&gt; &gt; &gt;, 14&gt;) (stl_algo.h:3876)
+==1365599==    by 0xE2ED60E: operator Rcpp::IntegerVector (table.h:106)
+==1365599==    by 0xE2ED60E: Rcpp::Vector&lt;13, Rcpp::PreserveStorage&gt; Rcpp::table&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt;(Rcpp::VectorBase&lt;14, true, Rcpp::sugar::Plus_Vector_Vector&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, true, Rcpp::sugar::Times_Vector_Primitive&lt;14, true, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt; &gt; &gt; &gt; const&amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, Rcpp::Vector&lt;14, Rcpp::PreserveStorage&gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599== 
+&gt; print(str(dresult))
+ num 2.66
+NULL
+&gt; 
+&gt; 
+==1365599== 
+==1365599== HEAP SUMMARY:
+==1365599==     in use at exit: 58,885,992 bytes in 12,798 blocks
+==1365599==   total heap usage: 37,927 allocs, 25,129 frees, 102,635,213 bytes allocated
+==1365599== 
+==1365599== LEAK SUMMARY:
+==1365599==    definitely lost: 0 bytes in 0 blocks
+==1365599==    indirectly lost: 0 bytes in 0 blocks
+==1365599==      possibly lost: 0 bytes in 0 blocks
+==1365599==    still reachable: 58,885,992 bytes in 12,798 blocks
+==1365599==                       of which reachable via heuristic:
+==1365599==                         newarray           : 4,264 bytes in 1 blocks
+==1365599==         suppressed: 0 bytes in 0 blocks
+==1365599== Rerun with --leak-check=full to see details of leaked memory
+==1365599== 
+==1365599== Use --track-origins=yes to see where uninitialised values come from
+==1365599== For lists of detected and suppressed errors, rerun with: -s
+==1365599== ERROR SUMMARY: 31504 errors from 311 contexts (suppressed: 0 from 0)
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>The complete log can be found here <a href="https://github.com/akhikolla/RcppDeepStateTools/blob/master/inst/valgrind_log_mi">valgrind log mi</a></p>
+
+<p>We see that 31504 errors are reported in the program from 311 contexts.
+Also, we can see issues like :</p>
+
+<p>Conditional jump or move depends on the uninitialized value(s)
+Use of an uninitialized value of size 8</p>
+
+<p>These happen when the process tries to access the memory locations that are outside of the available memory locations or the uninitialized locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.</p>
+
+<p>Here when we look at the code from where Valgrind found issues in src/mi_cmi.cpp.
+We can see the issue is with the table parameter and in the following line of code</p>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">IntegerVector</span> <span class="n">c_x</span><span class="o">=</span><span class="n">table</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">c_y</span><span class="o">=</span><span class="n">table</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">c_xy</span><span class="o">=</span><span class="n">table</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1000</span><span class="o">*</span><span class="n">y</span><span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>If we observe the IntegerVector c_xy, it is a combination of values from NumericVectors x and y. The vector c_xy is uninitialized when it uses values like NaN, NA from x,y.  The creation of vector c_xy fails. Although the creation c_xy failed, we are trying to access it. Valgrind starts complaining about the issue by throwing an error message <code class="language-plaintext highlighter-rouge">Conditional jump or move depends on the uninitialized value(s)</code>.
+In the documentation of <code class="language-plaintext highlighter-rouge">mi</code>, we see that x and y should be of equal length. An easy fix could be to check for the size of vectors x and y. Another option could be checking or restricting the acceptance of values like NaN, NA onto the vectors x,y, and also the proc value</p>
+
+<p>Thanks to <a href="https://tdhock.github.io/blog/">Dr. Toby Dylan Hocking</a> for his support on the project.
+This blog is kindly contributed to <a href="https://www.r-bloggers.com/">R-bloggers</a>.</p>
+
+:ET

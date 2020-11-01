@@ -2,7 +2,7 @@
 title: Prototyping Realistic Input Generation
 author: Akhila Chowdary Kolla
 categories: [Proposal]
-tags: [Prototyping,ValgrindTest]
+tags: [Prototyping,ValgrindTest,R]
 math: true
 ---
 
@@ -235,8 +235,7 @@ When we add the below code to ambient-test.R and run it with valgrind we can see
 We see that an InvalidRead error is reported in the program. This happens when the process tries to access the memory location that is outside of the available memory locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.
 
 
-Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project.
-This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
+Thanks to [Dr.Toby Dylan Hocking](https://tdhock.github.io/blog/) for his support on the project. This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 
 
 

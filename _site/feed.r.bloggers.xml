@@ -5,9 +5,1595 @@
         <description>A blog on Integrating Rcpp with DeepState</description>
         <link>http://localhost:4000/</link>
         <atom:link href="http://localhost:4000/feed.rbloggers.xml" rel="self" type="application/rss+xml"/>
-        <pubDate>Thu, 24 Sep 2020 07:44:55 -0700</pubDate>
-        <lastBuildDate>Thu, 24 Sep 2020 07:44:55 -0700</lastBuildDate>
+        <pubDate>Sun, 01 Nov 2020 09:35:50 -0700</pubDate>
+        <lastBuildDate>Sun, 01 Nov 2020 09:35:50 -0700</lastBuildDate>
         <generator>Jekyll v4.1.1</generator>
+        
+            <item>
+                <title>RcppDeepStateTools</title>
+                <author>akhilakollasrinu424jf@gmail.com (Akhila Chowdary Kolla)</author>
+                <description>&lt;p&gt;As a part of the RcppDeepState project, we created another Linux specific R package, RcppDeepStateTools fuzz tests Rcpp packages under different external fuzzers. RcppDeepStateTools provides an interface to four external fuzzers :&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;AFL&lt;/li&gt;
+  &lt;li&gt;LibFuzzer&lt;/li&gt;
+  &lt;li&gt;Eclipser&lt;/li&gt;
+  &lt;li&gt;HonggFuzz&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Fuzzers:&lt;/strong&gt; 
+Fuzzers are software programs that provide invalid, unexpected, or random data as inputs to a computer program. These inputs are passed on the code expecting crashes, failures, and memory leaks.&lt;/p&gt;
+
+&lt;p&gt;RcppDeepState makes use of the built-in fuzzer in deepstate to generate inputs to test Rcpp packages. It is likely to uncover more bugs than standard sanitizer and debugging tools.&lt;/p&gt;
+
+&lt;p&gt;In this blog post, I’ll discuss how to use these external fuzzers for running the function-specific test harnesses. To test any Rcpp package using any of these fuzzers is as easy as making a call to deepstate_compile_tools() function.&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;RcppDeepState&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate_compile_tools&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This function takes the path to the package that you want to test. I’ll use the testSAN package in the RcppDeepState testpkgs folder as my default test package.&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;RcppDeepStateTools&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate_pkg_create_&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Fuzzer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;You choose from the following Fuzzers:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;AFL&lt;/li&gt;
+  &lt;li&gt;HonggFuzz&lt;/li&gt;
+  &lt;li&gt;Eclipser&lt;/li&gt;
+  &lt;li&gt;LibFuzzer&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here choosing any of the options - will do the following:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Install the fuzzer.&lt;/li&gt;
+  &lt;li&gt;Compile and link the specific fuzzer with the deepstate base library.&lt;/li&gt;
+  &lt;li&gt;Compile and Run the Testharnesses.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt;The system might ask for superuser permissions to install the dependencies that are needed by the fuzzers.&lt;/p&gt;
+
+&lt;p&gt;Choosing a fuzzer would also generate a fuzzer specific makefile for all the test harnesses that were previously created by RcppDeepState for each test package function.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;AFL:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;American Fuzzy Lop is a brute-force fuzzer that automatically discovers interesting test cases that could explore new paths of the target binary. Using AFL could help us uncover the unexplored paths that are usually not tested by normal brute force fuzzers.&lt;/p&gt;
+
+&lt;p&gt;AFL has compile-time instrumentation which means the program inserts the necessary instructions into the program during compilation resulting in better run-time performance.&lt;/p&gt;
+
+&lt;p&gt;If we want to test the package using AFL we have to choose option 1 :&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; RcppDeepStateTools::deepstate_pkg_create_AFL&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;path&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] &lt;span class=&quot;s2&quot;&gt;&quot;rm -f *.o &amp;amp;&amp;amp; make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/AFL.Makefile&quot;&lt;/span&gt;
+/home/akhila/.RcppDeepState/afl-2.52b/afl-clang++ &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/usr/share/R/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.afl.o &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt;
+afl-cc 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 533 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+/home/akhila/.RcppDeepState/afl-2.52b/afl-clang++ &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.afl /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.afl.o &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_afl &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/src/include &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/usr/share/R/lib &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/share/R/lib &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_afl &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_afl &lt;span class=&quot;nt&quot;&gt;-lR&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-lRInside&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-ldeepstate_AFL&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/usr/share/R/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.cpp
+afl-cc 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 1364 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+afl-as 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Instrumented 25 locations &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit, non-hardened mode, ratio 100%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; /home/akhila/.RcppDeepState/afl-2.52b/afl-fuzz &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/afl_rcpp_read_out_of_bound_output &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; 150 &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; 2000 &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; ~/.RcppDeepState/deepstate-master/build_afl/ &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.afl &lt;span class=&quot;nt&quot;&gt;--fuzz_save_passing&lt;/span&gt; 
+afl-fuzz 2.52b by &amp;lt;lcamtuf@google.com&amp;gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] You have 12 CPU cores and 2 runnable tasks &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;utilization: 17%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Try parallel &lt;span class=&quot;nb&quot;&gt;jobs&lt;/span&gt; - see docs/parallel_fuzzing.txt.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Checking CPU core loadout...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Found a free CPU core, binding to &lt;span class=&quot;c&quot;&gt;#0.&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Checking core_pattern...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Checking CPU scaling governor...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Setting up output directories...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Scanning &lt;span class=&quot;s1&quot;&gt;'/home/akhila/.RcppDeepState/deepstate-master/build_afl/'&lt;/span&gt;...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] No auto-generated dictionary tokens to reuse.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Creating hard links &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;all input files...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Validating target binary...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000000,orig:CMakeCache.txt'&lt;/span&gt;...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Spinning up the fork server...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] All right - fork server is up.
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 14294, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1579 us
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000001,orig:Makefile'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 27177, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1551 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000002,orig:cmake_install.cmake'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 3243, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1543 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000003,orig:libdeepstate.a'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 422642, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1610 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000004,orig:libdeepstate32.a'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 299086, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1630 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000005,orig:libdeepstate_AFL.a'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 422642, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1630 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Attempting dry run with &lt;span class=&quot;s1&quot;&gt;'id:000006,orig:setup.py'&lt;/span&gt;...
+    len &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 2281, map size &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 248, &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1560 us
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: No new instrumentation output, &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; may be useless.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] All &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;cases are processed.
+
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: Some &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;cases are huge &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;412 kB&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; - see docs/perf_tips.txt!
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; WARNING: Some &lt;span class=&quot;nb&quot;&gt;test &lt;/span&gt;cases look useless. Consider using a smaller set.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Here are some useful stats:
+
+    Test &lt;span class=&quot;k&quot;&gt;case&lt;/span&gt; count: 1 favored, 0 variable, 7 total
+       Bitmap range: 248 to 248 bits &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;average: 248.00 bits&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        Exec timing: 1543 to 1630 us &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;average: 1586 us&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] All &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;and ready to roll!
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The afl output looks something like this:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;     American fuzzy lop 2.52b &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;rcpp_read_out_of_bound_DeepState_TestHar...&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+┌─ process timing ─────────────────────────────────────┬─ overall results ─────┐
+│        run &lt;span class=&quot;nb&quot;&gt;time&lt;/span&gt; : 0 days, 1 hrs, 11 min, 17 sec      │  cycles &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt; : 498    │
+│   last new path : none yet &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;odd, check syntax!&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;      │  total paths : 7      │
+│ last &lt;span class=&quot;nb&quot;&gt;uniq &lt;/span&gt;crash : none seen yet                      │ &lt;span class=&quot;nb&quot;&gt;uniq &lt;/span&gt;crashes : 0      │
+│  last &lt;span class=&quot;nb&quot;&gt;uniq &lt;/span&gt;hang : none seen yet                      │   &lt;span class=&quot;nb&quot;&gt;uniq &lt;/span&gt;hangs : 0      │
+├─ cycle progress ────────────────────┬─ map coverage ─┴───────────────────────┤
+│  now processing : 4&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;57.14%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;       │    map density : 0.38% / 0.38%         │
+│ paths timed out : 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0.00%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;         │ count coverage : 1.00 bits/tuple       │
+├─ stage progress ────────────────────┼─ findings &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;depth ────────────────────┤
+│  now trying : splice 13             │ favored paths : 1 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;14.29%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;             │
+│ stage execs : 16/32 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;50.00%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;        │  new edges on : 1 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;14.29%&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;             │
+│ total execs : 2.33M                 │ total crashes : 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0 unique&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;           │
+│  &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;speed : 430.4/sec             │  total tmouts : 0 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0 unique&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;           │
+├─ fuzzing strategy yields ───────────┴───────────────┬─ path geometry ────────┤
+│   bit flips : 0/224, 0/217, 0/203                   │    levels : 1          │
+│  byte flips : 0/28, 0/21, 0/7                       │   pending : 0          │
+│ arithmetics : 0/1554, 0/28, 0/0                     │  pend fav : 0          │
+│  known ints : 0/134, 0/582, 0/308                   │ own finds : 0          │
+│  dictionary : 0/0, 0/0, 0/0                         │  imported : n/a        │
+│       havoc : 0/897k, 0/1.43M                       │ stability : 100.00%    │
+│        trim : 100.00%/147, 0.00%                    ├────────────────────────┘
+├─────────────────────────────────────────────────────┘          &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;cpu000: 71%]
+
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] We&lt;span class=&quot;s1&quot;&gt;'re done here. Have a nice day!
+
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;AFL output has the following categories :&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Process timing:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This section is pretty straight forward:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;run time: It gives the time for how long the fuzzer has been running&lt;/li&gt;
+  &lt;li&gt;last new path: The tools look for new paths and If it finds any it gives the time passed since the last path.&lt;/li&gt;
+  &lt;li&gt;last uniq crash/last uniq hang: It gives the time since the last crash/hang occured.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These fuzzing jobs are expected to run for days and weeks sometimes to find interesting paths.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Cycle progress:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Now processing : It shows the id of the test case that the process is currently working on.&lt;/li&gt;
+  &lt;li&gt;Path timed out: It gives the number of inputs that cause a timeout when used in the program.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Stage progress:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This part gives is important to understand what the fuzzer is doing:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;now trying : This include various fuzzing stages that include calibration,trim,bitflip,interest,extras,havoc,splice,sync&lt;/li&gt;
+  &lt;li&gt;stage execs: This gives the number of current program executions.&lt;/li&gt;
+  &lt;li&gt;total execs: The total number of executions so far.&lt;/li&gt;
+  &lt;li&gt;exec speed: execution speed at which the program executes.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;map coverage:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;map density:  This gives the proportion of how many inputs we have already covered with the number of inputs that the input corpus can hold.&lt;/li&gt;
+  &lt;li&gt;count coverage: This gives the hit count for every branch.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;findings in-depth:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;favored paths: This includes the count of paths that take considerably more time to run.&lt;/li&gt;
+  &lt;li&gt;new edges on The number of test cases that resulted in better edge coverage.&lt;/li&gt;
+  &lt;li&gt;total crashes/total tmouts : Counter for crashes and timeouts&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Overall results:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;cycles done: It gives the number of times the fuzzer ran over the interesting test cases generated so far.&lt;/li&gt;
+  &lt;li&gt;total paths: The number of test paths discovered so far.&lt;/li&gt;
+  &lt;li&gt;uniq crashes/uniq hangs: Number of test cases that caused crashes/hangs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When we run a target binary using AFL we get an afl output folder which contains the following directories:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;crashes - This folder contains all the file inputs that caused crashes on the executable&lt;/li&gt;
+  &lt;li&gt;queue - This folder contains all the inputs that are generated by the fuzzer.&lt;/li&gt;
+  &lt;li&gt;fuzzer_stats - This file has all statistic info (unique_crashes:0, fu
+zzer_pid:6030)&lt;/li&gt;
+  &lt;li&gt;plot_data - This file has details like unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth for every input passed.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;HonggFuzz&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;HonggFuzz is a security-oriented, multi-process, and multi-threaded fuzzer. This takes care of running multiple copies of the fuzzer and uses all the available CPU cores with a single instance.&lt;/p&gt;
+
+&lt;p&gt;When we test the package using hongg fuzz the output looks something like this:&lt;/p&gt;
+
+&lt;p&gt;First runs the make file and then executes the testharness:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; RcppDeepStateTools::deepstate_pkg_create_HonggFuzz&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;path&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] &lt;span class=&quot;s2&quot;&gt;&quot;rm -f *.o &amp;amp;&amp;amp; make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Hongg.Makefile&quot;&lt;/span&gt;
+/home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/usr/share/R/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt;
+/home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ &lt;span class=&quot;nt&quot;&gt;-g&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/src/include &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/usr/share/R/lib &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr/share/R/lib &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz &lt;span class=&quot;nt&quot;&gt;-Wl&lt;/span&gt;,-rpath&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz &lt;span class=&quot;nt&quot;&gt;-lR&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-lRInside&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-ldeepstate_HFUZZ&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/usr/share/R/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include &lt;span class=&quot;nt&quot;&gt;-I&lt;/span&gt;/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.cpp
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; /home/akhila/.RcppDeepState/honggfuzz/honggfuzz &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; 2000 &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output &lt;span class=&quot;nt&quot;&gt;-x&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg ___FILE___ &lt;span class=&quot;nt&quot;&gt;--fuzz_save_passing&lt;/span&gt; 
+Start &lt;span class=&quot;nb&quot;&gt;time&lt;/span&gt;:&lt;span class=&quot;s1&quot;&gt;'2020-10-28.00.12.14'&lt;/span&gt; bin:&lt;span class=&quot;s1&quot;&gt;'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg'&lt;/span&gt;, input:&lt;span class=&quot;s1&quot;&gt;'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output'&lt;/span&gt;, output:&lt;span class=&quot;s1&quot;&gt;'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output'&lt;/span&gt;, persistent:false, stdin:false, mutation_rate:5, &lt;span class=&quot;nb&quot;&gt;timeout&lt;/span&gt;:2000, max_runs:0, threads:6, minimize:false, git_commit:af84d98b2e5ddf1dca6c81a23a8e579e83af7139
+
+&lt;span class=&quot;nt&quot;&gt;------------------------&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;  0 days 00 hrs 11 mins 04 secs &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;----------------------&lt;/span&gt;
+  Iterations : 519174 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;519.17k]
+        Mode : Static
+      Target : /home/akhila/R/x86_64-pc-linux-g.....FILE___ &lt;span class=&quot;nt&quot;&gt;--fuzz_save_passing&lt;/span&gt;
+     Threads : 6, CPUs: 12, CPU%: 690% &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;57%/CPU]
+       Speed : 805/sec &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;avg: 781]
+     Crashes : 0 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;unique: 0, blacklist: 0, verified: 0]
+    Timeouts : 0 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;2000 sec]
+ Corpus Size : 0, max: 8192 bytes, init: 86885 files
+  Cov Update : 0 days 00 hrs 11 mins 04 secs ago
+    Coverage : &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;none]
+&lt;span class=&quot;nt&quot;&gt;----------------------------------&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; LOGS &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;------------------&lt;/span&gt;/ honggfuzz 2.3 /-
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The output of the honggfuzz is self-explanatory. It provides the following information:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Iterations: The number of fuzzing iterations.&lt;/li&gt;
+  &lt;li&gt;Mode: The mode of the run and can be chosen between static and persistent.&lt;/li&gt;
+  &lt;li&gt;Target: the executable binary that we are fuzzing.&lt;/li&gt;
+  &lt;li&gt;Threads: Number of threads and number of CPU’s usage.&lt;/li&gt;
+  &lt;li&gt;Speed: The speed at which each test case is run.&lt;/li&gt;
+  &lt;li&gt;Crashes: Number of crashes found&lt;/li&gt;
+  &lt;li&gt;Timeouts: Number of test cases that are timed out&lt;/li&gt;
+  &lt;li&gt;Corpus Size: The size of the valid and interesting inputs that are discovered so far.&lt;/li&gt;
+  &lt;li&gt;Cov Update: Time the fuzzer ran for.&lt;/li&gt;
+  &lt;li&gt;Coverage: Percentage of code coverage for interesting inputs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;When we run the honggfuzz on the binary it creates the following directories in its output folder:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;crashes - This folder contains all the file inputs that caused crashes on the executable&lt;/li&gt;
+  &lt;li&gt;queue - This folder contains all the inputs that are generated by the fuzzer.&lt;/li&gt;
+  &lt;li&gt;fuzzer_stats - This file has all statistic info (unique_crashes:0, fu
+zzer_pid:6030)&lt;/li&gt;
+  &lt;li&gt;plot_data - This file has details like unix_time, cycles_done, cur_path, paths_total, pending_total, pending_favs, map_size, unique_crashes, unique_hangs, max_depth for every input passed.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;Eclipser&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Eclipser is a binary-based fuzz testing tool that uses lightweight instrumentation. This is also known as coverage based fuzzer that allows deepstate to quickly detect harder to reach bugs by covering interesting paths.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; RcppDeepStateTools::deepstate_pkg_create_Eclipser&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;path&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] &lt;span class=&quot;s2&quot;&gt;&quot;rm -f *.o &amp;amp;&amp;amp; make -f /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Eclipser.Makefile&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; deepstate-eclipser ./rcpp_read_out_of_bound_DeepState_TestHarness &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; eclipser_out &lt;span class=&quot;nt&quot;&gt;--timeout&lt;/span&gt; 30 
+INFO:deepstate:Setting log level from DEEPSTATE_LOG: 2
+INFO:deepstate.core.base:Setting log level from &lt;span class=&quot;nt&quot;&gt;--min_log_level&lt;/span&gt;: 2
+INFO:deepstate.core.fuzz:Calling pre_exec before fuzzing
+WARNING:deepstate.executors.fuzz.eclipser:Eclipser doesn&lt;span class=&quot;s1&quot;&gt;'t limit child processes memory.
+INFO:deepstate.core.fuzz:Executing command `['&lt;/span&gt;dotnet&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;/home/akhila/.RcppDeepState/Eclipser/build/Eclipser.dll&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;fuzz&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--program&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;/home/akhila/R/RcppDeepState/inst/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--src&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;file&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--fixfilepath&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;eclipser.input&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--initarg&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--input_test_file&lt;/span&gt; eclipser.input &lt;span class=&quot;nt&quot;&gt;--abort_on_fail&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--no_fork&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--min_log_level&lt;/span&gt; 2&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--outputdir&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;eclipser_out/the_fuzzer&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--maxfilelen&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;8192&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--timelimit&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;', '&lt;/span&gt;30&lt;span class=&quot;s1&quot;&gt;']`
+INFO:deepstate.core.fuzz: Using DeepState output.
+INFO:deepstate.core.fuzz: Started fuzzer process with PID 11932.
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz:Timeout
+INFO:deepstate.executors.fuzz.eclipser:Performing decoding on testcases and crashes
+FUZZ_STATS:deepstate.core.fuzz:unique_crashes:0
+FUZZ_STATS:deepstate.core.fuzz:fuzzer_pid:11932
+FUZZ_STATS:deepstate.core.fuzz:start_time:1603856530
+FUZZ_STATS:deepstate.core.fuzz:------------------------------
+INFO:deepstate.core.fuzz: Killing process 11932 and childs.
+INFO:deepstate.core.fuzz:Fuzzer subprocess (PID 11932) exited with `0`
+INFO:deepstate.core.fuzz:Fuzzer exec time: 51.86s
+INFO:deepstate.core.fuzz:Calling post-exec for fuzzer post-processing
+INFO:deepstate.executors.fuzz.eclipser: Performing decoding on test cases and crashes
+
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The Eclipser gives some information about crashes, fuzzer id, and Unix time at which fuzzer started. The output folder of Eclipser looks similar to the output folder of Honggfuzz and AFL.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;LibFuzzer:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;LibFuzzer is a coverage driven fuzzing engine.The code coverage information for libFuzzer is provided by LLVM’s Sanitizer instrumentation.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; RcppDeepStateTools::deepstate_pkg_create_LibFuzzer&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;path&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] &lt;span class=&quot;s2&quot;&gt;&quot;rm -f *.o &amp;amp;&amp;amp; make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzz.Makefile&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./rcpp_read_out_of_bound_DeepState_TestHarness_LF &lt;span class=&quot;nt&quot;&gt;--fuzz&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--fuzz_save_passing&lt;/span&gt; 
+DEBUG: INFO: libFuzzer ignores flags that start with &lt;span class=&quot;s1&quot;&gt;'--'&lt;/span&gt;
+
+DEBUG: INFO: Seed: 3628062210
+
+DEBUG: INFO: Loaded 1 modules   &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1690 inline 8-bit counters&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: 
+DEBUG: 1690 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;604720, 604dba&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 
+DEBUG: 
+
+DEBUG: INFO: Loaded 1 PC tables &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1690 PCs&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: 
+DEBUG: 1690 &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;5b41b8,5bab58&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 
+DEBUG: 
+
+DEBUG: INFO: &lt;span class=&quot;nt&quot;&gt;-max_len&lt;/span&gt; is not provided&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; libFuzzer will not generate inputs larger than 4096 bytes
+
+input starts
+rbound values: 0
+input ends
+input starts
+rbound values: 167772160
+input ends
+AddressSanitizer:DEADLYSIGNAL
+&lt;span class=&quot;o&quot;&gt;=================================================================&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1642018&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;ERROR: AddressSanitizer: SEGV on unknown address 0x614028000240 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;pc 0x00000059213b bp 0x7ffe444b33d0 sp 0x7ffe444b33a0 T0&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1642018&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;The signal is caused by a READ memory access.
+    &lt;span class=&quot;c&quot;&gt;#0 0x59213b in rcpp_read_out_of_bound(int) /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/read_out_of_bound.cpp:7:10&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#1 0x55e412 in DeepState_Test_testSAN_deepstate_test_rcpp_read_out_of_bound_test() /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp:21:5&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#2 0x556cd8 in DeepState_Run_testSAN_deepstate_test_rcpp_read_out_of_bound_test() /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp:10:1&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#3 0x56f6e7 in DeepState_RunTestNoFork (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x56f6e7)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#4 0x56f4fa in LLVMFuzzerTestOneInput (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x56f4fa)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#5 0x45f131 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x45f131)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#6 0x45e875 in fuzzer::Fuzzer::RunOne(unsigned char const*, unsigned long, bool, fuzzer::InputInfo*, bool*) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x45e875)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#7 0x461051 in fuzzer::Fuzzer::ReadAndExecuteSeedCorpora(std::__Fuzzer::vector&amp;lt;fuzzer::SizedFile, fuzzer::fuzzer_allocator&amp;lt;fuzzer::SizedFile&amp;gt; &amp;gt;&amp;amp;) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x461051)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#8 0x4614f9 in fuzzer::Fuzzer::Loop(std::__Fuzzer::vector&amp;lt;fuzzer::SizedFile, fuzzer::fuzzer_allocator&amp;lt;fuzzer::SizedFile&amp;gt; &amp;gt;&amp;amp;) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x4614f9)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#9 0x4501ce in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x4501ce)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#10 0x479012 in main (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x479012)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#11 0x7f7b02b210b2 in __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6+0x270b2)&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;#12 0x424f6d in _start (/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness_LF+0x424f6d)&lt;/span&gt;
+
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/read_out_of_bound.cpp:7:10 &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;rcpp_read_out_of_bound&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;int&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1642018&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;ABORTING
+make: &lt;span class=&quot;k&quot;&gt;***&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzz.Makefile:5: /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/libfuzzer_rcpp_read_out_of_bound_log] Error 1
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The Libfuzzer can detect an invalid read memory access with the address sanitizer instrumentation in the above TestHarness. Once there is an error/bug in the memory the fuzzer aborts with a trace of the issues.&lt;/p&gt;
+
+&lt;p&gt;Thanks to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dr.Toby Dylan Hocking&lt;/code&gt; for his support on this project. This blog is kindly contributed to &lt;a href=&quot;https://www.r-bloggers.com/&quot;&gt;R-bloggers&lt;/a&gt;.&lt;/p&gt;
+</description>
+                <pubDate>Sun, 25 Oct 2020 00:00:00 -0700</pubDate>
+                <link>http://localhost:4000/posts/RcppDeepStateTools/</link>
+                <guid isPermaLink="true">http://localhost:4000/posts/RcppDeepStateTools/</guid>
+                
+                <category>RcppDeepStateTools</category>
+                
+                <category>Tools</category>
+                
+                <category>AFL</category>
+                
+                <category>libfuzzer</category>
+                
+                <category>honggfuzz</category>
+                
+                <category>Eclipser</category>
+                
+                <category>Angora</category>
+                
+                <category>R</category>
+                
+                
+                <category>Tools</category>
+                
+            </item>
+        
+            <item>
+                <title>Prototyping Realistic Input Generation - Exported Functions</title>
+                <author>akhilakollasrinu424jf@gmail.com (Akhila Chowdary Kolla)</author>
+                <description>&lt;p&gt;As a part of &lt;a href=&quot;https://docs.google.com/document/d/15z2diPTJ3MTLe3H9WfHNAdzkn1bYIsLJ6_tpGWRqQBU/edit&quot;&gt;R consortium fuzz testing proposal&lt;/a&gt;, we are creating a simple prototype on how to extract the valid inputs for a function from the RcppTestPackage and test it with Valgrind. We also test the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;test harness&lt;/code&gt; of the same rcpp method by passing DeepState’s randomized inputs and see if Valgrind can detect any errors for those inputs.&lt;/p&gt;
+
+&lt;p&gt;In the &lt;a href=&quot;https://akhikolla.github.io./posts/Prototyping-testharness/&quot;&gt;previous blog post&lt;/a&gt; we learned to extract the valid inputs for functions and test the functions with both valid inputs and DeepState generated random inputs and check for Valgrind errors. In this blog post, we will go one step further and try to find errors in the exported functions in the package.&lt;/p&gt;
+
+&lt;p&gt;Here we will perform all our tests and analysis on the Rcpp package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BNSL&lt;/code&gt;. For example, consider the rcpp function - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BNSL::mi&lt;/code&gt; we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;find the valid examples:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rbinom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rbinom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0.5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rbinom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0.1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;%%&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; 
+
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnorm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnorm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnorm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rnorm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0.9&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1-0.9&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Run the valid inputs:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now, let’s run the  examples in R/mi.R&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;R vanilla &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'example(&quot;mi&quot;,package=&quot;BNSL&quot;)'&lt;/span&gt;
+ARGUMENT &lt;span class=&quot;s1&quot;&gt;'vanilla'&lt;/span&gt; __ignored__
+
+
+R version 3.6.3 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;2020-02-29&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Holding the Windsock&quot;&lt;/span&gt;
+Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;C&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2020 The R Foundation &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;Statistical Computing
+Platform: x86_64-pc-linux-gnu &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;64-bit&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type &lt;span class=&quot;s1&quot;&gt;'license()'&lt;/span&gt; or &lt;span class=&quot;s1&quot;&gt;'licence()'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;distribution details.
+
+  Natural language support but running &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;an English locale
+
+R is a collaborative project with many contributors.
+Type &lt;span class=&quot;s1&quot;&gt;'contributors()'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;more information and
+&lt;span class=&quot;s1&quot;&gt;'citation()'&lt;/span&gt; on how to cite R or R packages &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;publications.
+
+Type &lt;span class=&quot;s1&quot;&gt;'demo()'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;some demos, &lt;span class=&quot;s1&quot;&gt;'help()'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;on-line &lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;, or
+&lt;span class=&quot;s1&quot;&gt;'help.start()'&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;an HTML browser interface to help.
+Type &lt;span class=&quot;s1&quot;&gt;'q()'&lt;/span&gt; to quit R.
+
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; example&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;mi&quot;&lt;/span&gt;,package&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;BNSL&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Loading required package: bnlearn
+Loading required package: igraph
+
+Attaching package: ‘igraph’
+mi&amp;gt; &lt;span class=&quot;nv&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;100
+
+mi&amp;gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rbinom&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n,1,0.5&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rbinom&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n,1,0.5&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0
+
+mi&amp;gt; &lt;span class=&quot;nv&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rbinom&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n,1,0.1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=(&lt;/span&gt;x+z&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+mi&amp;gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y,proc&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y,2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0.4333487
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0.4197742
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0.4391413
+
+mi&amp;gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rnorm&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rnorm&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y,proc&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0
+
+mi&amp;gt; &lt;span class=&quot;nv&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rnorm&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;rnorm&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;n&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0.9&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;x+sqrt&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1-0.9^2&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;z&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; mi&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x,y,proc&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1] 0.4602899
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; 
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We find don’t any issues with running the examples on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mi&lt;/code&gt; function. Now let’s try using Valgrind with it and see if we find any issues with the function.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Run function under valgrind:&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;R &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; valgrind &lt;span class=&quot;nt&quot;&gt;--vanilla&lt;/span&gt; &amp;lt; mi.R
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1365578&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Memcheck, a memory error detector
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1365578&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;C&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2002-2017, and GNU GPL&lt;span class=&quot;s1&quot;&gt;'d, by Julian Seward et al.
+==1365578== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==1365578== Command: /usr/lib/R/bin/exec/R --vanilla
+==1365578== 
+
+R version 3.6.3 (2020-02-29) -- &quot;Holding the Windsock&quot;
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '&lt;/span&gt;license&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' or '&lt;/span&gt;licence&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '&lt;/span&gt;contributors&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for more information and
+'&lt;/span&gt;citation&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' on how to cite R or R packages in publications.
+
+Type '&lt;/span&gt;demo&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for some demos, '&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for on-line help, or
+'&lt;/span&gt;help.start&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for an HTML browser interface to help.
+Type '&lt;/span&gt;q&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' to quit R.
+
+&amp;gt; n=100
+&amp;gt; args &amp;lt;- list(
++     x=rnorm(n),
++     y=rnorm(n),
++     proc=10) 
+&amp;gt; result &amp;lt;- do.call(BNSL::mi,args)
+&amp;gt; str(result)
+ num 0
+&amp;gt; 
+==1365578== 
+==1365578== HEAP SUMMARY:
+==1365578==     in use at exit: 59,988,472 bytes in 14,200 blocks
+==1365578==   total heap usage: 56,854 allocs, 42,654 frees, 104,358,740 bytes allocated
+==1365578== 
+==1365578== LEAK SUMMARY:
+==1365578==    definitely lost: 0 bytes in 0 blocks
+==1365578==    indirectly lost: 0 bytes in 0 blocks
+==1365578==      possibly lost: 0 bytes in 0 blocks
+==1365578==    still reachable: 59,988,472 bytes in 14,200 blocks
+==1365578==                       of which reachable via heuristic:
+==1365578==                         newarray           : 4,264 bytes in 1 blocks
+==1365578==         suppressed: 0 bytes in 0 blocks
+==1365578== Rerun with --leak-check=full to see details of leaked memory
+==1365578== 
+==1365578== For lists of detected and suppressed errors, rerun with: -s
+==1365578== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Running the code under Valgrind didn’t show any bugs or memory leaks. Let’s go one step ahead and try running the function under deepstate generated inputs.&lt;/p&gt;
+
+&lt;p&gt;As we know to run code under deepstate:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Create testharness for the function.&lt;/li&gt;
+  &lt;li&gt;Compile the testharness&lt;/li&gt;
+  &lt;li&gt;Run the testharness&lt;/li&gt;
+  &lt;li&gt;Generate the crash files&lt;/li&gt;
+  &lt;li&gt;Check the crash files for inputs that can break the code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Now store the deepstate inputs that are obtained from the crash files into a list.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;mi-test.R&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;dargs&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.05004e+27&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.50426e+215&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9.63399e+201&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.1132e+274&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.83593e-82&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4.79375e+179&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.55624e+245&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;7.37432e+52&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.57214e+46&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9.01655e+209&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-6.39404e+163&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.52852e-99&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.95231e+100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.77922e+44&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.64826e-168&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.11394e+53&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.57803e+156&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.32126e+233&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-6.12072e+299&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.46716e+09&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.02395e-62&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4.63683e-299&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.94216e+211&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.90791e-115&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.34423e+132&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.94344e+19&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.26647e-129&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.78086e+15&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;6.11934e-118&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-7.07064e+298&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.36403e-174&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-9.23416e+298&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3.07213e+235&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-5.93601e-265&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.83547e-282&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.76343e-119&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.55076e+22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.08499e+112&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-9.44741e+78&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-5.77067e+285&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.17325e+240&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-0.00164493&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.11009e+165&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.38652e-69&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;6.42513e-282&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.1697e-54&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-180216&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.13757e-104&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-3.50357e+180&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.47957e+87&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.97102e+10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.27176e+11&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.9436e+25&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.67334e-276&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.27839e+231&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;8.11476e+61&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;7.118e+228&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-4.51193e-132&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.34696e+22&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.10614e-19&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-6.13223e-133&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.5923e+294&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-4.27302e-105&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4.78741e-108&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3.89587e+273&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-8.19642e+21&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;proc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-784179594&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ 
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dresult&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;do.call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BNSL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Run the mi-test.R file which makes a call to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mi()&lt;/code&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;R &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; valgrind &lt;span class=&quot;nt&quot;&gt;--vanilla&lt;/span&gt; &amp;lt; mi-test.R
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This will open the R session and will run the mi() with the deepstate inputs and the output is as follows:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Output&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akolla@snaps-computer:~/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/extdata/compileAttributes/BNSL&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;R &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; valgrind &lt;span class=&quot;nt&quot;&gt;--vanilla&lt;/span&gt; &amp;lt; mi.R
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1365599&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Memcheck, a memory error detector
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;1365599&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;C&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2002-2017, and GNU GPL&lt;span class=&quot;s1&quot;&gt;'d, by Julian Seward et al.
+==1365599== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==1365599== Command: /usr/lib/R/bin/exec/R --vanilla
+==1365599== 
+
+R version 3.6.3 (2020-02-29) -- &quot;Holding the Windsock&quot;
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '&lt;/span&gt;license&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' or '&lt;/span&gt;licence&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '&lt;/span&gt;contributors&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for more information and
+'&lt;/span&gt;citation&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' on how to cite R or R packages in publications.
+
+Type '&lt;/span&gt;demo&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for some demos, '&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for on-line help, or
+'&lt;/span&gt;help.start&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for an HTML browser interface to help.
+Type '&lt;/span&gt;q&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' to quit R.
+
+&amp;gt; dargs &amp;lt;- list(
++ x=c(1.05004e+27,1.50426e+215,9.63399e+201,1.1132e+274,2.83593e-82,4.79375e+179,3.55624e+245,7.37432e+52,1.57214e+46,NaN,9.01655e+209,-6.39404e+163,1.52852e-99,3.95231e+100,2.77922e+44,1.64826e-168,2.11394e+53,1.57803e+156,-1.32126e+233,-6.12072e+299,3.46716e+09,2.02395e-62,NaN,4.63683e-299,-1.94216e+211,3.90791e-115,-1.34423e+132,-1.94344e+19,3.26647e-129,-1.78086e+15,6.11934e-118,-7.07064e+298,-1.36403e-174,-9.23416e+298,-3.07213e+235,-5.93601e-265,-1.83547e-282,-1.76343e-119,NaN,-1.55076e+22,-1.08499e+112,-9.44741e+78,NaN,-5.77067e+285,-2.17325e+240,-0.00164493,2.11009e+165,-1.38652e-69,NaN,6.42513e-282,-1.1697e-54,-180216,-2.13757e-104,-3.50357e+180,3.47957e+87,-2.97102e+10,1.27176e+11,-1.9436e+25,3.67334e-276,2.27839e+231,8.11476e+61,7.118e+228,-4.51193e-132,-1.34696e+22,-2.10614e-19,-6.13223e-133,-1.5923e+294,-4.27302e-105,4.78741e-108,0),
++ y=c(3.89587e+273,-8.19642e+21,NaN,NaN,NaN),
++ proc=-784179594)
+&amp;gt; 
+&amp;gt; dresult &amp;lt;- do.call(BNSL::mi,dargs)
+==1365599== Conditional jump or move depends on uninitialised value(s)
+==1365599==    at 0xE2EC89A: operator() (functional_hash.h:249)
+==1365599==    by 0xE2EC89A: _M_hash_code (hashtable_policy.h:1292)
+==1365599==    by 0xE2EC89A: std::__detail::_Map_base&amp;lt;double, std::pair&amp;lt;double const, int&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, std::__detail::_Select1st, std::equal_to&amp;lt;double&amp;gt;, std::hash&amp;lt;double&amp;gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&amp;lt;false, false, true&amp;gt;, true&amp;gt;::operator[](double const&amp;amp;) (hashtable_policy.h:695)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::iter_base&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::const_iter_traits&amp;gt;, Rcpp::sugar::CountInserter&amp;lt;std::unordered_map&amp;lt;double, int, std::hash&amp;lt;double&amp;gt;, std::equal_to&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, double&amp;gt; &amp;gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&amp;lt;13, Rcpp::PreserveStorage&amp;gt; Rcpp::table&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;(Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt; const&amp;amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+==1365599== 
+==1365599== Conditional jump or move depends on uninitialised value(s)
+==1365599==    at 0xE2EC8A0: operator() (functional_hash.h:249)
+==1365599==    by 0xE2EC8A0: _M_hash_code (hashtable_policy.h:1292)
+==1365599==    by 0xE2EC8A0: std::__detail::_Map_base&amp;lt;double, std::pair&amp;lt;double const, int&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, std::__detail::_Select1st, std::equal_to&amp;lt;double&amp;gt;, std::hash&amp;lt;double&amp;gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&amp;lt;false, false, true&amp;gt;, true&amp;gt;::operator[](double const&amp;amp;) (hashtable_policy.h:695)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::iter_base&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::const_iter_traits&amp;gt;, Rcpp::sugar::CountInserter&amp;lt;std::unordered_map&amp;lt;double, int, std::hash&amp;lt;double&amp;gt;, std::equal_to&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, double&amp;gt; &amp;gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&amp;lt;13, Rcpp::PreserveStorage&amp;gt; Rcpp::table&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;(Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt; const&amp;amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+==1365599== 
+==1365599== Use of uninitialised value of size 8
+==1365599==    at 0xE2EC8B6: _M_find_before_node (hashtable.h:1538)
+==1365599==    by 0xE2EC8B6: _M_find_node (hashtable.h:655)
+==1365599==    by 0xE2EC8B6: std::__detail::_Map_base&amp;lt;double, std::pair&amp;lt;double const, int&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, std::__detail::_Select1st, std::equal_to&amp;lt;double&amp;gt;, std::hash&amp;lt;double&amp;gt;, std::__detail::_Mod_range_hashing, std::__detail::_Default_ranged_hash, std::__detail::_Prime_rehash_policy, std::__detail::_Hashtable_traits&amp;lt;false, false, true&amp;gt;, true&amp;gt;::operator[](double const&amp;amp;) (hashtable_policy.h:697)
+==1365599==    by 0xE2ED2CA: operator[] (unordered_map.h:985)
+==1365599==    by 0xE2ED2CA: operator() (table.h:34)
+==1365599==    by 0xE2ED2CA: for_each&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::iter_base&amp;lt;Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;::const_iter_traits&amp;gt;, Rcpp::sugar::CountInserter&amp;lt;std::unordered_map&amp;lt;double, int, std::hash&amp;lt;double&amp;gt;, std::equal_to&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, double&amp;gt; &amp;gt; (stl_algo.h:3876)
+==1365599==    by 0xE2ED2CA: Table (table.h:95)
+==1365599==    by 0xE2ED2CA: Rcpp::Vector&amp;lt;13, Rcpp::PreserveStorage&amp;gt; Rcpp::table&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;(Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt; const&amp;amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599==    by 0x493B475: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49716CF: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D60F: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498F41E: ??? (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x4990252: Rf_applyClosure (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x498D729: Rf_eval (in /usr/lib/R/lib/libR.so)
+==1365599==    by 0x49081CC: ??? (in /usr/lib/R/lib/libR.so)
+(discontinued log)...
+==1365599== Use of uninitialised value of size 8
+==1365599==    at 0x4D39C5F: __mpn_addmul_1 (addmul_1.S:41)
+==1365599==    by 0x1FFEFF761F: ???
+==1365599==    by 0x4D40798: __printf_fp_l (printf_fp.c:532)
+==1365599==    by 0x4D596C7: printf_positional (vfprintf-internal.c:2072)
+==1365599==    by 0x4D5AF4C: __vfprintf_internal (vfprintf-internal.c:1733)
+==1365599==    by 0x4D70119: __vsnprintf_internal (vsnprintf.c:114)
+==1365599==    by 0x4E11E40: __snprintf_chk (snprintf_chk.c:38)
+==1365599==    by 0xE2EB0D1: snprintf (stdio2.h:67)
+==1365599==    by 0xE2EB0D1: coerce_to_string&amp;lt;14&amp;gt; (r_coerce.h:241)
+==1365599==    by 0xE2EB0D1: r_coerce&amp;lt;14, 16&amp;gt; (r_coerce.h:279)
+==1365599==    by 0xE2EB0D1: r_coerce&amp;lt;14, 16&amp;gt; (r_coerce.h:273)
+==1365599==    by 0xE2EB0D1: operator()&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; (table.h:49)
+==1365599==    by 0xE2EB0D1: Rcpp::sugar::Grabber&amp;lt;std::map&amp;lt;double, int, Rcpp::internal::NAComparator&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, 14&amp;gt; std::for_each&amp;lt;std::_Rb_tree_const_iterator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, Rcpp::sugar::Grabber&amp;lt;std::map&amp;lt;double, int, Rcpp::internal::NAComparator&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, 14&amp;gt; &amp;gt;(std::_Rb_tree_const_iterator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, std::_Rb_tree_const_iterator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt;, Rcpp::sugar::Grabber&amp;lt;std::map&amp;lt;double, int, Rcpp::internal::NAComparator&amp;lt;double&amp;gt;, std::allocator&amp;lt;std::pair&amp;lt;double const, int&amp;gt; &amp;gt; &amp;gt;, 14&amp;gt;) (stl_algo.h:3876)
+==1365599==    by 0xE2ED60E: operator Rcpp::IntegerVector (table.h:106)
+==1365599==    by 0xE2ED60E: Rcpp::Vector&amp;lt;13, Rcpp::PreserveStorage&amp;gt; Rcpp::table&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt;(Rcpp::VectorBase&amp;lt;14, true, Rcpp::sugar::Plus_Vector_Vector&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, true, Rcpp::sugar::Times_Vector_Primitive&amp;lt;14, true, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt; &amp;gt; &amp;gt; &amp;gt; const&amp;amp;) (table.h:127)
+==1365599==    by 0xE2E5836: Jeffreys_mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int, int) (mi_cmi.cpp:55)
+==1365599==    by 0xE2E8D30: mi(Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, int) (mi_cmi.cpp:40)
+==1365599==    by 0xE2D0AE1: BNSL_mi (RcppExports.cpp:97)
+==1365599== 
+&amp;gt; print(str(dresult))
+ num 2.66
+NULL
+&amp;gt; 
+&amp;gt; 
+==1365599== 
+==1365599== HEAP SUMMARY:
+==1365599==     in use at exit: 58,885,992 bytes in 12,798 blocks
+==1365599==   total heap usage: 37,927 allocs, 25,129 frees, 102,635,213 bytes allocated
+==1365599== 
+==1365599== LEAK SUMMARY:
+==1365599==    definitely lost: 0 bytes in 0 blocks
+==1365599==    indirectly lost: 0 bytes in 0 blocks
+==1365599==      possibly lost: 0 bytes in 0 blocks
+==1365599==    still reachable: 58,885,992 bytes in 12,798 blocks
+==1365599==                       of which reachable via heuristic:
+==1365599==                         newarray           : 4,264 bytes in 1 blocks
+==1365599==         suppressed: 0 bytes in 0 blocks
+==1365599== Rerun with --leak-check=full to see details of leaked memory
+==1365599== 
+==1365599== Use --track-origins=yes to see where uninitialised values come from
+==1365599== For lists of detected and suppressed errors, rerun with: -s
+==1365599== ERROR SUMMARY: 31504 errors from 311 contexts (suppressed: 0 from 0)
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The complete log can be found here &lt;a href=&quot;https://github.com/akhikolla/RcppDeepStateTools/blob/master/inst/valgrind_log_mi&quot;&gt;valgrind log mi&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;We see that 31504 errors are reported in the program from 311 contexts.
+Also, we can see issues like :&lt;/p&gt;
+
+&lt;p&gt;Conditional jump or move depends on the uninitialized value(s)
+Use of an uninitialized value of size 8&lt;/p&gt;
+
+&lt;p&gt;These happen when the process tries to access the memory locations that are outside of the available memory locations or the uninitialized locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.&lt;/p&gt;
+
+&lt;p&gt;Here when we look at the code from where Valgrind found issues in src/mi_cmi.cpp.
+We can see the issue is with the table parameter and in the following line of code&lt;/p&gt;
+
+&lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;IntegerVector&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c_xy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;If we observe the IntegerVector c_xy, it is a combination of values from NumericVectors x and y. The vector c_xy is uninitialized when it uses values like NaN, NA from x,y.  The creation of vector c_xy fails. Although the creation c_xy failed, we are trying to access it. Valgrind starts complaining about the issue by throwing an error message &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Conditional jump or move depends on the uninitialized value(s)&lt;/code&gt;.
+In the documentation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mi&lt;/code&gt;, we see that x and y should be of equal length. An easy fix could be to check for the size of vectors x and y. Another option could be checking or restricting the acceptance of values like NaN, NA onto the vectors x,y, and also the proc value&lt;/p&gt;
+
+&lt;p&gt;Thanks to &lt;a href=&quot;https://tdhock.github.io/blog/&quot;&gt;Dr. Toby Dylan Hocking&lt;/a&gt; for his support on the project.
+This blog is kindly contributed to &lt;a href=&quot;https://www.r-bloggers.com/&quot;&gt;R-bloggers&lt;/a&gt;.&lt;/p&gt;
+
+</description>
+                <pubDate>Mon, 28 Sep 2020 00:00:00 -0700</pubDate>
+                <link>http://localhost:4000/posts/Prototyping-testharness-2/</link>
+                <guid isPermaLink="true">http://localhost:4000/posts/Prototyping-testharness-2/</guid>
+                
+                <category>Prototyping</category>
+                
+                <category>ValgrindTest</category>
+                
+                <category>ExportedFunctions</category>
+                
+                <category>R</category>
+                
+                
+                <category>Proposal</category>
+                
+            </item>
+        
+            <item>
+                <title>Prototyping Realistic Input Generation</title>
+                <author>akhilakollasrinu424jf@gmail.com (Akhila Chowdary Kolla)</author>
+                <description>&lt;p&gt;As a part of &lt;a href=&quot;https://docs.google.com/document/d/15z2diPTJ3MTLe3H9WfHNAdzkn1bYIsLJ6_tpGWRqQBU/edit&quot;&gt;R consortium fuzz testing proposal&lt;/a&gt;, we are creating a simple prototype on how to extract the valid inputs for a function from the RcppTestPackage and test it with Valgrind. We also test the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;test harness&lt;/code&gt; of the same rcpp method by passing DeepState’s randomized inputs and see if Valgrind can detect any errors for those inputs.&lt;/p&gt;
+
+&lt;p&gt;To test an rcpp function, we need to extract the valid inputs first. Usually, not all the rcpp methods have their code documented with well-written examples. Instead, we can look for the rcpp function calls in the package and obtain the inputs. These rcpp function calls are found mostly in another R function. The first we need to do is identify those R functions and check for an rcpp function call and save those inputs.&lt;/p&gt;
+
+&lt;p&gt;Here we will perform all our tests and analysis on the Rcpp package &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ambient&lt;/code&gt;. For example, consider the rcpp function - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt; we will test this function with both valid inputs and DeepState generated random inputs and check for Valgrind errors. First, check the man page of the function for its examples. But when I refer to the man pages there is no documentation for the rcpp function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt;. In this case, we need to follow the below steps to get the inputs.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Identify the function call in the package:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akhila@akhila-VirtualBox:~/R/packages/ambient&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-Rw&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;gen_cubic2d_c&quot;&lt;/span&gt;
+Binary file src/RcppExports.o matches
+src/cubic.cpp:NumericVector gen_cubic2d_c&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NumericVector x, NumericVector y, double freq, int seed&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+Binary file src/cubic.o matches
+src/RcppExports.cpp:// gen_cubic2d_c
+src/RcppExports.cpp:NumericVector gen_cubic2d_c&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;NumericVector x, NumericVector y, double freq, int seed&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+src/RcppExports.cpp:    rcpp_result_gen &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; Rcpp::wrap&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;gen_cubic2d_c&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x, y, freq, seed&lt;span class=&quot;o&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+R/noise-cubic.R:    gen_cubic2d_c&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dims&lt;span class=&quot;nv&quot;&gt;$x&lt;/span&gt;, dims&lt;span class=&quot;nv&quot;&gt;$y&lt;/span&gt;, frequency, seed&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+R/RcppExports.R:gen_cubic2d_c &amp;lt;- &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x, y, freq, seed&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;From above trace we can see that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt; is found in RcppExports.cpp, RcppExports.R and src/cubic.cpp. But the function call to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt; with valid inputs can be found in R/noise-cubic.R.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Identify the inputs passed:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Now, let’s check the R/noise-cubic.R and find the gen_cubic2d_c function call.&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;gen_cubic&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frequency&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check_dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;is.null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random_seed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;is.null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen_cubic2d_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frequency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen_cubic3d_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;frequency&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;From this, we can understand that a call to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic&lt;/code&gt; is to be made to invoke &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt;. There is documentation available for the function gen_cubic in man/noise_cubic.R.&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length.out&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;long_grid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;noise&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen_cubic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now make a call to gen_cubic() and store the inputs into a list. To make a call to gen_cubic() in noise_cubic.Rd we need to run the following script:&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akhila@akhila-VirtualBox:~/R/packages/ambient&lt;span class=&quot;nv&quot;&gt;$R&lt;/span&gt; vanilla &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'example(&quot;noise_cubic&quot;,package=&quot;ambient&quot;)'&lt;/span&gt;
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This will open the R session and will run the gen_cubic() and when these values are printed to the console the inputs are as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.01&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.02&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.03&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.04&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;880336483&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;These stored inputs are the real and valid arguments to the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt;. The Rscript to make a call to the function with the above inputs looks like this.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ambient-test.R&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length.out&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ambient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;long_grid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g.seq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valid.args&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;880336483L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valid.args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valid.result&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;do.call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ambient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cubic_2d_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;worklist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;valid.result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Output&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;akhila@akhila-VirtualBox:~/R/packages/ambient&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;R &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; valgrind &lt;span class=&quot;nt&quot;&gt;--vanilla&lt;/span&gt; &amp;lt; ambient-test.R
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6585&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Memcheck, a memory error detector
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6585&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;C&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2002-2017, and GNU GPL&lt;span class=&quot;s1&quot;&gt;'d, by Julian Seward et al.
+==6585== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==6585== Command: /home/akhila/lib/R/bin/exec/R --vanilla
+==6585== 
+
+R version 3.6.3 (2020-02-29) -- &quot;Holding the Windsock&quot;
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type '&lt;/span&gt;license&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' or '&lt;/span&gt;licence&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type '&lt;/span&gt;contributors&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for more information and
+'&lt;/span&gt;citation&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' on how to cite R or R packages in publications.
+
+Type '&lt;/span&gt;demo&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for some demos, '&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;help&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for on-line help, or
+'&lt;/span&gt;help.start&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' for an HTML browser interface to help.
+Type '&lt;/span&gt;q&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;' to quit R.
+
+&amp;gt; g.seq &amp;lt;- seq(1, 10, length.out = 1000)
+&amp;gt; grid &amp;lt;- ambient::long_grid(g.seq, g.seq)
+&amp;gt; valid.args &amp;lt;- list(
++   x=grid$x,
++   y=grid$y,
++   freq=1,
++   seed=880336483L)
+&amp;gt; str(valid.args)
+List of 4
+ $ x   : num [1:1000000] 1 1 1 1 1 1 1 1 1 1 ...
+ $ y   : num [1:1000000] 1 1.01 1.02 1.03 1.04 ...
+ $ freq: num 1
+ $ seed: int 880336483
+&amp;gt; valid.result &amp;lt;- do.call(ambient:::gen_cubic2d_c, valid.args)
+&amp;gt; str(valid.result)
+ num [1:1000000] -0.228 -0.227 -0.226 -0.224 -0.223 ...
+&amp;gt; 
+==6585== 
+==6585== HEAP SUMMARY:
+==6585==     in use at exit: 76,529,943 bytes in 10,702 blocks
+==6585==   total heap usage: 30,343 allocs, 19,641 frees, 115,713,891 bytes allocated
+==6585== 
+==6585== LEAK SUMMARY:
+==6585==    definitely lost: 0 bytes in 0 blocks
+==6585==    indirectly lost: 0 bytes in 0 blocks
+==6585==      possibly lost: 0 bytes in 0 blocks
+==6585==    still reachable: 76,529,943 bytes in 10,702 blocks
+==6585==                       of which reachable via heuristic:
+==6585==                         newarray           : 4,264 bytes in 1 blocks
+==6585==         suppressed: 0 bytes in 0 blocks
+==6585== Rerun with --leak-check=full to see details of leaked memory
+==6585== 
+==6585== For counts of detected and suppressed errors, rerun with: -v
+==6585== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For these valid inputs we don’t see any Valgrind memory leaks or bugs in the code but when we executed the same code with DeepState generated randomized inputs we are able to detect bugs in the rcpp function.&lt;/p&gt;
+
+&lt;p&gt;Inputs generated by DeepState for the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gen_cubic2d_c&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate.args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;of&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.15e-100&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;   &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.20e+297&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-4.39e-67&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.23e-63&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+ &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;777429942&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;ambient-test.R&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-R highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;n&quot;&gt;deepstate.args&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.1518e-100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-2.9298e+100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;NaN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-1.20158e+297&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;-4.39091e-67&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;Inf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;2.23269e-63&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;seed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;777429942L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate.args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate.result&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;do.call&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ambient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen_cubic2d_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate.args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;deepstate.result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;When we add the below code to ambient-test.R and run it with valgrind we can see the following Valgrind error trace.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Output&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;table class=&quot;rouge-table&quot;&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td class=&quot;rouge-gutter gl&quot;&gt;&lt;pre class=&quot;lineno&quot;&gt;1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;rouge-code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Invalid &lt;span class=&quot;nb&quot;&gt;read &lt;/span&gt;of size 8
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    at 0x112E6679: gen_cubic2d_c&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, Rcpp::Vector&amp;lt;14, Rcpp::PreserveStorage&amp;gt;, double, int&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;cubic.cpp:85&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x112D930A: _ambient_gen_cubic2d_c &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;RcppExports.cpp:59&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F3B953: R_doDotCall &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dotcode.c:607&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F3BE85: do_dotcall &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dotcode.c:1280&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F79765: bcEval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:7099&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F85D4F: Rf_eval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:723&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F87B6E: R_execClosure &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:1888&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F88936: Rf_applyClosure &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:1814&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F85F22: Rf_eval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:846&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F08C0C: do_docall &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;coerce.c:2704&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F79765: bcEval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:7099&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F85D4F: Rf_eval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:723&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;  Address 0x10f96e20 is 2,912 bytes inside a block of size 7,960 alloc&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;d
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    at 0x4C2FB0F: malloc &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;in&lt;/span&gt; /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4FC4B02: GetNewPage &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;memory.c:946&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4FC6B41: Rf_allocVector3 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;memory.c:2784&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x5027381: Rf_allocVector &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Rinlinedfuns.h:593&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x5027381: ReadItem &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:1932&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x502852F: ReadBCConsts &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:2101&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x502852F: ReadBC1 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:2118&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x50277EC: ReadBC &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:2129&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x50277EC: ReadItem &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:1966&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x5026B39: ReadItem &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:1873&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x5027596: ReadItem &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:1961&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x50288BD: R_Unserialize &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:2181&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x5029C59: R_unserialize &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:2892&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x502A090: do_lazyLoadDBfetch &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;serialize.c:3196&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    by 0x4F862D5: Rf_eval &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;eval.c:830&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; str&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;deepstate.result&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ num &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1:9] NaN NaN NaN NaN NaN ...
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; HEAP SUMMARY:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;     &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;use at &lt;span class=&quot;nb&quot;&gt;exit&lt;/span&gt;: 77,286,802 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;10,884 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;   total heap usage: 30,258 allocs, 19,374 frees, 116,140,760 bytes allocated
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; LEAK SUMMARY:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    definitely lost: 0 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    indirectly lost: 0 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;      possibly lost: 0 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;    still reachable: 77,286,802 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;10,884 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;                       of which reachable via heuristic:
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;                         newarray           : 4,264 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;1 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;         suppressed: 0 bytes &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0 blocks
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; Rerun with &lt;span class=&quot;nt&quot;&gt;--leak-check&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;full to see details of leaked memory
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; 
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; For counts of detected and suppressed errors, rerun with: &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;6224&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; ERROR SUMMARY: 1 errors from 1 contexts &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;suppressed: 75 from 1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+
+&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We see that an InvalidRead error is reported in the program. This happens when the process tries to access the memory location that is outside of the available memory locations. Here the size 8 means that the process was trying to read 8 bytes. It also gives information about memory addresses.&lt;/p&gt;
+
+&lt;p&gt;Thanks to &lt;a href=&quot;https://tdhock.github.io/blog/&quot;&gt;Dr.Toby Dylan Hocking&lt;/a&gt; for his support on the project.
+This blog is kindly contributed to &lt;a href=&quot;https://www.r-bloggers.com/&quot;&gt;R-bloggers&lt;/a&gt;.&lt;/p&gt;
+
+</description>
+                <pubDate>Wed, 23 Sep 2020 00:00:00 -0700</pubDate>
+                <link>http://localhost:4000/posts/Prototyping-testharness/</link>
+                <guid isPermaLink="true">http://localhost:4000/posts/Prototyping-testharness/</guid>
+                
+                <category>Prototyping</category>
+                
+                <category>ValgrindTest</category>
+                
+                <category>R</category>
+                
+                
+                <category>Proposal</category>
+                
+            </item>
         
             <item>
                 <title>Rcpp Packages Limited Fuzz Testing</title>
@@ -32,7 +1618,7 @@
 
 &lt;p&gt;As discussed earlier RcppDeepState uses a combination of deepstate and Valgrind to reveal the subtle bugs in the code.DeepState is for generating the learned inputs and Valgrind to test the code using those inputs. An interesting thing about RcppDeepState is that it’s able to detect the bugs in few Rcpp packages where CRAN failed to detect.&lt;/p&gt;
 
-&lt;p&gt;CRAN tests its packages against the different kinds of checks. Those check include valgrind,clang-ASAN,clang-UBSAN,gcc-ASAN,gcc-UBSAN,clang11,gcc10,noLD,ATLAS,MKL,OpenBLAS,LTO,noOMP,donttest,rchk,rcnst. The &lt;a href=&quot;https://cran.r-project.org/web/checks/check_issue_kinds.html&quot;&gt;CRAN check&lt;/a&gt; page provides more detailed explaination of these tools.&lt;/p&gt;
+&lt;p&gt;CRAN tests its packages against the different kinds of checks. Those check include valgrind, clang-ASAN, clang-UBSAN, gcc-ASAN, gcc-UBSAN, clang11, gcc10, noLD, ATLAS, MKL, OpenBLAS, LTO, noOMP, donttest, rchk, rcnst. The &lt;a href=&quot;https://cran.r-project.org/web/checks/check_issue_kinds.html&quot;&gt;CRAN check&lt;/a&gt; page provides more detailed explaination of these tools.&lt;/p&gt;
 
 &lt;p&gt;Issues in the packages are mostly identified by Address sanitizers, undefined behavior sanitizer, and Valgrind. The below data table lists the most frequent tools and count of packages that tools identified the errors in:&lt;/p&gt;
 
@@ -1986,7 +3572,7 @@ Example:&lt;/p&gt;
 &lt;a href=&quot;https://github.com/akhikolla/RcppDeepState&quot;&gt;RcppDeepState&lt;/a&gt;
 and test harness can be found in &lt;a href=&quot;https://github.com/akhikolla/RcppDeepState/blob/master/src/TestRcppharness.cpp&quot;&gt;Testharness&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Thanks to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dr.Toby Dylan Hocking&lt;/code&gt; for his support.This blog is kindly contributed to &lt;a href=&quot;https://www.r-bloggers.com/&quot;&gt;R-bloggers&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Thanks to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dr.Toby Dylan Hocking&lt;/code&gt; for his support on this project. This blog is kindly contributed to &lt;a href=&quot;https://www.r-bloggers.com/&quot;&gt;R-bloggers&lt;/a&gt;.&lt;/p&gt;
 &lt;hr /&gt;
 
 </description>
