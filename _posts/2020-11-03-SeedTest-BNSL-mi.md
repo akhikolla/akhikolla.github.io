@@ -20,110 +20,134 @@ The name of the output folder is a combination of the timer and the seed provide
 Making a call to deepstate_fuzz_fun_seed on the cluster with 12 cores:
 
 ```R
-> seed_analyze <- RcppDeepState::deepstate_fuzz_fun_analyze("~/RcppDeepStateTest/BNSL/inst/testfiles/mi",1604461988,5)
+> seed_analyze <- deepstate_fuzz_fun_analyze("~/RcppDeepStateTest/BNSL/inst/testfiles/mi",1604505428,5)
+running the executable .. 
+cd /home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi && valgrind --xml=yes --xml-file=/home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi/5_1604505428/1604505428_log --tool=memcheck --leak-check=yes --track-origins=yes ./mi_DeepState_TestHarness --seed=1604505428 --timeout=5 --fuzz > /home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi/5_1604505428/seed_valgrind_log_text 2>&1
+```
+####Output :
+
+```R
 > seed_analyze
       inputs          logtable
 1: <list[3]> <data.table[1x5]>
 ```
+
 The output of the method is a data table with two columns. 
 inputs: list of inputs passed on the binary
 logtable: A data table with error trace.
+
 ####Inputs :
+
 ```R
 > seed_analyze$inputs[[1]]
 $proc
-[1] -251329436
+[1] -19761251
 
 $x
- [1]   7.501136e-92 -5.926908e-154 -6.821346e-278   1.039617e+71  -6.693818e-42
- [6]  1.460757e-179 -5.904605e-179  -2.331613e-33   3.837833e-19  2.930730e-121
-[11]   2.336555e+88 -2.308112e-255  3.052736e+288  -5.003846e-24             NA
-[16]  6.438480e-217             NA  1.140529e-265 -1.312231e-307  5.126633e+150
-[21]  1.587464e-147   4.880654e+31             NA   1.007890e-69  -6.406234e+44
-[26]  2.713041e+178  7.026392e+241   9.488017e+50  1.189190e-285   1.137626e+07
-[31] -1.462272e-155  -1.219976e-06 -6.637242e+220  2.081497e+133  3.158171e+307
-[36]  4.872180e+233   3.759599e-37   9.856752e+91   3.402226e-97  3.537081e-137
-[41]   2.316902e+26 -1.211973e+218             NA  -1.152365e+61  4.144492e+195
-[46]   1.834769e-94  2.451281e-207   4.555089e+49             NA -2.811718e+160
-[51]  -1.072064e-82 -7.785196e+304 -4.245621e-269 -1.858355e-259  4.806128e+175
-[56] -7.607835e-278   0.000000e+00
+ [1] -8.213736e-268 -1.951914e+111 -9.649061e+204  5.483429e-282 -5.254999e+138
+ [6]   1.045533e-24 -3.494727e+224  1.615706e-259             NA -6.122974e+263
+[11] -9.058724e-124   1.234785e+39 -6.111462e-282             NA  4.098092e-244
+[16]   6.243492e-15  7.166968e+145  2.216562e-289  5.401894e+301   7.074301e-83
+[21]   1.614506e-06   7.276571e-91 -1.848420e-262  4.080779e-261  8.245177e-141
+[26] -4.667568e+297 -8.396755e-120  -1.528634e+65   1.256631e-53  5.962137e+130
+[31]   3.429086e+88 -1.522745e+144  1.272269e+122  2.775626e+299 -1.306130e+303
+[36] -8.402301e+206  6.906340e-159  -8.118336e+06             NA  -3.902448e-94
+[41]  3.706050e-145 -1.057885e+173  3.247081e-159 -7.658977e+127  1.693851e+259
+[46]  1.392144e-269 -7.915335e-116 -9.418790e+169 -5.420730e+268   4.083569e+44
+[51]   1.881020e-59  1.844175e-265  -1.150161e+30  7.938846e+261  -1.039836e-02
+[56] -8.750542e-238  3.986502e+148  1.945617e-176  -1.307638e+71 -6.730065e-215
+[61]  3.305767e+287 -2.410883e+241  5.535715e+255 -5.280081e+226  2.130304e-247
+[66]  1.456126e-267  1.534800e-128 -1.756331e-123   4.660655e+92             NA
+[71]   5.351347e-05  2.744170e+135   2.006996e+85 -1.794635e+153   4.968092e+43
+[76]  -9.867509e+86 -4.357863e+272   3.973519e-86   5.242205e-20  2.716399e-253
+[81]   0.000000e+00
 
 $y
- [1]  8.029829e-278 -1.731409e+212             NA -2.844294e+288             NA
- [6]  1.933690e-151  -3.083875e-95  3.352638e-188  -2.619177e+13  -1.587476e-62
-[11]   1.235092e+68  1.025835e-270  -8.437176e+85  1.329739e-281  -1.784651e-96
-[16]  1.377834e+299  2.119751e+239             NA   6.685541e-09  -2.368265e-90
-[21] -5.754205e-152  4.447042e+273             NA  -1.552687e-16  -4.925611e+33
-[26] -1.351617e-103  -2.535115e+92  -4.200715e+11             NA  4.463942e+149
-[31]   0.000000e+00
+ [1] -4.062348e-197             NA             NA  4.214413e-277  4.367095e+225
+ [6] -1.643402e-274  4.829940e-133  9.947815e+147 -1.669293e-287  -3.515790e-53
+[11]  -8.549773e-30  3.888799e+205 -2.035246e-143             NA  -4.788236e-09
+[16]  -4.798404e-95  1.759833e-241 -1.718525e-135 -6.977067e+286 -2.336878e+198
+[21]   3.050028e+65  -3.317124e-62  1.298565e+304   1.027234e-12  1.048329e-186
+[26]             NA  7.691019e-173 -6.669731e+156  1.856961e+172   5.269763e-26
+[31] -4.962290e-107  9.547934e+136  5.718846e+156 -2.778251e+122  -9.292919e-64
+[36]  -3.215966e+91 -3.462424e-252  7.858450e+127 -2.618490e-263  1.491577e-264
+[41]   5.545080e+72  6.482595e-274   7.474529e+41  -2.647484e-29 -7.688922e-277
+[46] -4.910448e-257  1.047750e+187  1.556882e-296 -7.804792e+268  1.983118e-207
+[51] -8.672210e+201  4.650370e+105 -3.736430e-227  -1.637330e+40 -1.512451e+152
+[56]  1.396793e+194 -4.433286e-186   1.605388e+03             NA  2.607847e-176
+[61]   0.000000e+00
+
 ```
 #### Logtable :
+
 ```R
 > seed_analyze$logtable[[1]]
       err.kind                message           file.line
 1: InvalidRead Invalid read of size 8 src/mi_cmi.cpp : 57
                                                       address.msg address.trace
-1: Address 0x9f36468 is 0 bytes after a block of size 296 alloc'd          <NA>
-> 
+1: Address 0x83bf0b8 is 0 bytes after a block of size 536 alloc'd          <NA> 
+
 ```
 When we run the code on random seed 1604461988 for 5 seconds on a 12 core system gives the following Valgrind error :
 Invalid read of size 8 on function mi_cmi.cpp at line number 57.
 Let's run the same seed with the same timer on a single-core system.
 
 The following 5 seconds timer generates only one crash file.
-I get the same output when I run the testharness on the single-core system.
+I get the same output when I run the testharness on the six-core system.
 
 ```R
-> seed_analyze_onecore <- deepstate_fuzz_fun_analyze("~/Documents/packages/BNSL/BNSL/inst/testfiles/mi",1604461988,5)
-compiling .. 
-cd /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi && rm -f *.o && make
-
-clang++ -g -I/home/akhila/lib/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/mi_DeepState_TestHarness.cpp -o /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/mi_DeepState_TestHarness.o -c
-clang++ -g -o /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/mi_DeepState_TestHarness /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/mi_DeepState_TestHarness.o -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include -I/home/akhila/.RcppDeepState/deepstate-master/build -I/home/akhila/.RcppDeepState/deepstate-master/src/include -L/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -Wl,-rpath=/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -L/home/akhila/lib/R/lib -Wl,-rpath=/home/akhila/lib/R/lib -L/home/akhila/.RcppDeepState/deepstate-master/build -Wl,-rpath=/home/akhila/.RcppDeepState/deepstate-master/build -lR -lRInside -ldeepstate -I/home/akhila/lib/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/Documents/packages/BNSL/BNSL/src/*.cpp
+> seed_analyze <- deepstate_fuzz_fun_analyze(path,1604505428,5)
 running the executable .. 
-cd /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi && valgrind --xml=yes --xml-file=/home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/5_1604461988/1604461988_log --tool=memcheck --leak-check=yes --track-origins=yes ./mi_DeepState_TestHarness --seed=1604461988 --timeout=5 --fuzz > /home/akhila/Documents/packages/BNSL/BNSL/inst/testfiles/mi/5_1604461988/seed_valgrind_log_text 2>&1
+cd /home/akolla/extdata/packages/BNSL/inst/testfiles/mi && valgrind --xml=yes --xml-file=/home/akolla/extdata/packages/BNSL/inst/testfiles/mi/5_1604505428/1604505428_log --tool=memcheck --leak-check=yes --track-origins=yes ./mi_DeepState_TestHarness --seed=1604505428 --timeout=5 --fuzz > /home/akolla/extdata/packages/BNSL/inst/testfiles/mi/5_1604505428/seed_valgrind_log_text 2>&1
 ```
 ####Output :
 ```R
-> seed_analyze_onecore
-   inputs     logtable
-1: <list> <data.table>
+> seed_analyze
+      inputs          logtable
+1: <list[3]> <data.table[1x5]>
+
 ``` 
 ####Inputs :
 ```R
-> seed_analyze_onecore$inputs[[1]]
+> seed_analyze$inputs[[1]]
 $proc
-[1] 322829161
+[1] -1490887255
 
 $x
- [1]   7.501136e-92 -5.926908e-154 -6.821346e-278   1.039617e+71  -6.693818e-42  1.460757e-179
- [7] -5.904605e-179  -2.331613e-33   3.837833e-19  2.930730e-121   2.336555e+88 -2.308112e-255
-[13]  3.052736e+288            Inf -7.320795e+305  6.438480e-217           -Inf  1.140529e-265
-[19] -1.312231e-307  5.126633e+150  1.587464e-147   4.880654e+31  1.697429e+251   1.007890e-69
-[25]  -6.406234e+44  2.713041e+178  7.026392e+241   9.488017e+50  1.189190e-285   1.137626e+07
-[31]           -Inf  -1.219976e-06            NaN  2.081497e+133  3.158171e+307  4.872180e+233
-[37]   3.759599e-37   9.856752e+91   3.402226e-97  3.537081e-137   2.316902e+26 -1.211973e+218
-[43]            Inf  -1.152365e+61  4.144492e+195   1.834769e-94  2.451281e-207   4.555089e+49
-[49] -5.412640e+293 -2.811718e+160  -1.072064e-82 -7.785196e+304 -4.245621e-269 -1.858355e-259
-[55]  4.806128e+175 -7.607835e-278   0.000000e+00
+ [1] -8.213736e-268 -1.951914e+111 -9.649061e+204  5.483429e-282 -5.254999e+138
+ [6]           -Inf -3.494727e+224  1.615706e-259  9.814026e+151 -6.122974e+263
+[11] -9.058724e-124   1.234785e+39 -6.111462e-282 -8.484119e-261  4.098092e-244
+[16]   6.243492e-15  7.166968e+145  2.216562e-289  5.401894e+301   7.074301e-83
+[21]   1.614506e-06   7.276571e-91 -1.848420e-262  4.080779e-261  8.245177e-141
+[26] -4.667568e+297 -8.396755e-120  -1.528634e+65   1.256631e-53  5.962137e+130
+[31]            Inf -1.522745e+144  1.272269e+122  2.775626e+299 -1.306130e+303
+[36] -8.402301e+206  6.906340e-159  -8.118336e+06            NaN  -3.902448e-94
+[41]  3.706050e-145 -1.057885e+173  3.247081e-159 -7.658977e+127  1.693851e+259
+[46]  1.392144e-269 -7.915335e-116 -9.418790e+169 -5.420730e+268   4.083569e+44
+[51]   1.881020e-59  1.844175e-265  -1.150161e+30  7.938846e+261  -1.039836e-02
+[56] -8.750542e-238  3.986502e+148  1.945617e-176  -1.307638e+71 -6.730065e-215
+[61]  3.305767e+287 -2.410883e+241  5.535715e+255 -5.280081e+226  2.130304e-247
+[66]  1.456126e-267  1.534800e-128 -1.756331e-123   4.660655e+92            Inf
+[71]   5.351347e-05  2.744170e+135   2.006996e+85             NA   4.968092e+43
+[76]  -9.867509e+86 -4.357863e+272   3.973519e-86   5.242205e-20  2.716399e-253
+[81]   0.000000e+00
 
 $y
- [1]   9.894608e-87  5.735044e+122  -1.049110e-37   1.743387e+80  1.190855e-275 -1.557622e+272
- [7] -1.015618e+282  2.615049e+183  -2.984232e+40            Inf -2.734239e+206  -2.210497e+02
-[13]  5.107710e-292  -1.470213e+70 -1.777809e+180 -2.006614e-228  -7.556225e+97  1.542692e-195
-[19] -2.759879e+118 -2.872285e-183 -1.259615e+275   5.282215e+71  1.202453e-175 -4.378386e+184
-[25] -5.832857e-170  -8.634863e+96  1.997253e+115 -1.007742e+228  2.339930e-158   3.411637e-03
-[31] -9.995202e+104  5.407699e+165 -1.129186e-103  7.051546e+104 -3.292680e+254   2.693190e+99
-[37]            Inf  -2.285491e+12 -2.485616e+144  -2.427284e+30  1.333959e-152   4.186244e+65
-[43]   3.837861e-65  1.594996e+237 -3.490244e-290 -6.902360e+242   4.754065e-53 -1.234629e+181
-[49]  -5.580830e+02  -5.518447e+98  3.350312e-146  1.031690e+137 -2.303768e+294  -4.405587e-09
-[55] -7.941940e-143  1.060620e-275             NA   3.586735e+67             NA -5.851526e-183
-[61]  4.502878e-295  7.181342e+165  -6.719922e-72  1.197798e-192  -5.749472e+24 -1.192607e+152
-[67] -2.110572e+144  -4.995089e+62  2.686353e-189  3.647098e-272 -9.753619e-300  2.842563e+269
-[73]  1.259372e-136  3.197378e-121   0.000000e+00
+ [1]   6.742224e-54   2.264369e-75  2.552010e+103 -1.634306e-293 -3.580926e-165
+ [6] -1.184564e+263 -4.295887e-290  -1.584849e+06   6.878235e+06            Inf
+[11]            NaN  5.146838e+287 -4.904249e+226   4.395615e+79  1.618476e-264
+[16] -3.580926e-165  2.370920e+250  5.806345e+280 -1.718164e-268  9.788555e-196
+[21] -3.580926e-165  4.075043e-281 -9.659011e-171   0.000000e+00
 ```
 ####Logtable:
 
 ```R
+> seed_analyze$logtable[[1]]
+      err.kind                message           file.line
+1: InvalidRead Invalid read of size 8 src/mi_cmi.cpp : 57
+                                                      address.msg address.trace
+1: Address 0xaa492a0 is 0 bytes after a block of size 240 alloc'd          <NA>
 
 ```
+
+The output produced on both the systems is similar and shows that the issue is with line 57 in mi_cmi.cpp file.
