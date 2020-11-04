@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Automating the TestHarness
 author: Akhila Chowdary Kolla
 categories: [RcppDeepState,Automate Test Harness]

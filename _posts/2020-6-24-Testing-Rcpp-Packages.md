@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Testing Rcpp packages
 author: Akhila Chowdary Kolla
 categories: [Testing, Memory checks]

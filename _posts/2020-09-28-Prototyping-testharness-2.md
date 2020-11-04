@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Prototyping Realistic Input Generation - Exported Functions 
 author: Akhila Chowdary Kolla
 categories: [Proposal]
