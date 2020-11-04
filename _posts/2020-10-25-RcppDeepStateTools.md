@@ -2,7 +2,7 @@
 layout: post
 title: RcppDeepStateTools 
 author: Akhila Chowdary Kolla
-categories: [Tools]
+categories: [Tools,RcppDeepStateTools]
 tags: [RcppDeepStateTools,Tools,AFL,libfuzzer,honggfuzz,Eclipser,Angora,R]
 math: true
 ---

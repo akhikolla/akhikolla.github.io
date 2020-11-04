@@ -2,7 +2,7 @@
 layout: post
 title: Prototyping Realistic Input Generation
 author: Akhila Chowdary Kolla
-categories: [Proposal]
+categories: [Proposal,Prototyping Realistic Input Generation]
 tags: [Prototyping,ValgrindTest,R]
 math: true
 ---

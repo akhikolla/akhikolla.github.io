@@ -2,7 +2,7 @@
 layout: post
 title: Prototyping Realistic Input Generation - Exported Functions 
 author: Akhila Chowdary Kolla
-categories: [Proposal]
+categories: [Proposal,Prototyping Realistic Input Generation - Exported Functions]
 tags: [Prototyping,ValgrindTest,ExportedFunctions,R]
 math: true
 ---
