@@ -24,7 +24,7 @@ Making a call to deepstate_fuzz_fun_seed on the cluster with 12 cores:
 running the executable .. 
 cd /home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi && valgrind --xml=yes --xml-file=/home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi/5_1604505428/1604505428_log --tool=memcheck --leak-check=yes --track-origins=yes ./mi_DeepState_TestHarness --seed=1604505428 --timeout=5 --fuzz > /home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi/5_1604505428/seed_valgrind_log_text 2>&1
 ```
-####Output :
+#### Output :
 
 ```R
 > seed_analyze
@@ -33,10 +33,12 @@ cd /home/akhila/RcppDeepStateTest/BNSL/inst/testfiles/mi && valgrind --xml=yes -
 ```
 
 The output of the method is a data table with two columns. 
+
 inputs: list of inputs passed on the binary
+
 logtable: A data table with error trace.
 
-####Inputs :
+#### Inputs :
 
 ```R
 > seed_analyze$inputs[[1]]
@@ -100,14 +102,14 @@ I get the same output when I run the testharness on the six-core system.
 running the executable .. 
 cd /home/akolla/extdata/packages/BNSL/inst/testfiles/mi && valgrind --xml=yes --xml-file=/home/akolla/extdata/packages/BNSL/inst/testfiles/mi/5_1604505428/1604505428_log --tool=memcheck --leak-check=yes --track-origins=yes ./mi_DeepState_TestHarness --seed=1604505428 --timeout=5 --fuzz > /home/akolla/extdata/packages/BNSL/inst/testfiles/mi/5_1604505428/seed_valgrind_log_text 2>&1
 ```
-####Output :
+#### Output :
 ```R
 > seed_analyze
       inputs          logtable
 1: <list[3]> <data.table[1x5]>
 
 ``` 
-####Inputs :
+#### Inputs :
 ```R
 > seed_analyze$inputs[[1]]
 $proc
@@ -139,7 +141,7 @@ $y
 [16] -3.580926e-165  2.370920e+250  5.806345e+280 -1.718164e-268  9.788555e-196
 [21] -3.580926e-165  4.075043e-281 -9.659011e-171   0.000000e+00
 ```
-####Logtable:
+#### Logtable:
 
 ```R
 > seed_analyze$logtable[[1]]
