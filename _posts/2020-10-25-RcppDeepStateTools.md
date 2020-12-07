@@ -223,22 +223,39 @@ First runs the make file and then executes the testharness:
 [1] "rm -f *.o && make -f /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/Hongg.Makefile"
 /home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/qs/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.cpp -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -c
 /home/akhila/.RcppDeepState/honggfuzz/hfuzz_cc/hfuzz-clang++ -g -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg.o -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/include -I/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -I/home/akhila/.RcppDeepState/deepstate-master/src/include -L/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -Wl,-rpath=/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RInside/lib -L/usr/share/R/lib -Wl,-rpath=/usr/share/R/lib -L/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -Wl,-rpath=/home/akhila/.RcppDeepState/deepstate-master/build_honggfuzz -lR -lRInside -ldeepstate_HFUZZ -I/usr/share/R/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/Rcpp/include -I/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppArmadillo/include -I/home/akhila/.RcppDeepState/deepstate-master/src/include /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/src/*.cpp
-cd /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && /home/akhila/.RcppDeepState/honggfuzz/honggfuzz -t 2000 -i /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output -x -- /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg ___FILE___ --fuzz_save_passing 
-Start time:'2020-10-28.00.12.14' bin:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg', input:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_output', output:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output', persistent:false, stdin:false, mutation_rate:5, timeout:2000, max_runs:0, threads:6, minimize:false, git_commit:af84d98b2e5ddf1dca6c81a23a8e579e83af7139
 
-------------------------[  0 days 00 hrs 11 mins 04 secs ]----------------------
-  Iterations : 519174 [519.17k]
-        Mode : Static
-      Target : /home/akhila/R/x86_64-pc-linux-g.....FILE___ --fuzz_save_passing
-     Threads : 6, CPUs: 12, CPU%: 690% [57%/CPU]
-       Speed : 805/sec [avg: 781]
+cd /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound && /home/akhila/.RcppDeepState/honggfuzz/honggfuzz -t 2000 -i /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/inputs -o /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output -- /home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg ___FILE___
+Start time:'2020-12-07.17.52.52' bin:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/rcpp_read_out_of_bound_DeepState_TestHarness.hongg', input:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/inputs', output:'/home/akhila/R/x86_64-pc-linux-gnu-library/3.6/RcppDeepState/testpkgs/testSAN/inst/testfiles/rcpp_read_out_of_bound/hongg_rcpp_read_out_of_bound_output', persistent:false, stdin:false, mutation_rate:5, timeout:2000, max_runs:0, threads:6, minimize:false, git_commit:af84d98b2e5ddf1dca6c81a23a8e579e83af7139
+
+
+------------------------[  0 days 00 hrs 15 mins 21 secs ]----------------------
+  Iterations : 6787 [6.79k]
+  Mode [3/3] : Feedback Driven Mode
+      Target : /home/akhila/R/x86_64-pc-linux-g.....estHarness.hongg ___FILE___
+     Threads : 6, CPUs: 12, CPU%: 738% [61%/CPU]
+       Speed : 0/sec [avg: 7]
      Crashes : 0 [unique: 0, blacklist: 0, verified: 0]
     Timeouts : 0 [2000 sec]
- Corpus Size : 0, max: 8192 bytes, init: 86885 files
-  Cov Update : 0 days 00 hrs 11 mins 04 secs ago
-    Coverage : [none]
+ Corpus Size : 16, max: 8192 bytes, init: 1 files
+  Cov Update : 0 days 00 hrs 14 mins 34 secs ago
+    Coverage : edge: 451/3007 [14%] pc: 8 cmp: 24264
 ---------------------------------- [ LOGS ] ------------------/ honggfuzz 2.3 /-
-
+Sz:14 Tm:911670us (i/b/h/e/p/c) New:0/0/0/0/0/5, Cur:0/0/0/0/0/736
+Sz:8 Tm:611746us (i/b/h/e/p/c) New:0/0/0/0/0/1, Cur:0/0/0/0/0/689
+Sz:3 Tm:620150us (i/b/h/e/p/c) New:0/0/0/0/0/367, Cur:0/0/0/0/0/673
+Sz:3 Tm:856221us (i/b/h/e/p/c) New:0/0/0/0/0/12, Cur:0/0/0/0/0/654
+Sz:13 Tm:804400us (i/b/h/e/p/c) New:0/0/0/0/0/40, Cur:0/0/0/0/0/643
+Sz:7 Tm:768642us (i/b/h/e/p/c) New:0/0/0/0/0/30, Cur:0/0/0/0/0/565
+Sz:4 Tm:658233us (i/b/h/e/p/c) New:0/0/0/0/0/367, Cur:0/0/0/0/0/553
+Sz:7 Tm:698783us (i/b/h/e/p/c) New:0/0/0/0/0/331, Cur:0/0/0/0/0/458
+Signal 2 (Interrupt) received, terminating
+Terminating thread no. #5, left: 5
+Terminating thread no. #1, left: 4
+Terminating thread no. #2, left: 3
+Terminating thread no. #4, left: 2
+Terminating thread no. #3, left: 1
+Terminating thread no. #0, left: 0
+Summary iterations:6787 time:921 speed:7 crashes_count:0 timeout_count:0 new_units_added:11 slowest_unit_ms:3976 guard_nb:3007 branch_coverage_percent:14 peak_rss_mb:68
 ```
 The output of the honggfuzz is self-explanatory. It provides the following information:
 
