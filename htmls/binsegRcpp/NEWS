@@ -1,0 +1,30 @@
+
+2020.10.7
+
+Comment binseg_normal.cpp to explain optimal_cost computation.
+
+Use C++ multiset with operator< instead of multimap/vector.
+
+Use cumsum C++ vector for constant time mean/cost computation for any
+split.
+
+Store cost of segments before/after split, pass the cost values to
+maybe_add to avoid having to recompute them.
+
+Computation works for only one data point.
+
+2020.9.15
+
+remove unused C++ errors.
+
+test coef method.
+
+2020.9.3
+
+Bugfix for negative means, docs.
+
+predict/plot methods, copy code from example.
+
+2019.9.20
+
+Initial implementation.
