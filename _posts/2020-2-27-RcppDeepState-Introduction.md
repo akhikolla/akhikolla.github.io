@@ -294,7 +294,7 @@ TEST(OneOfTest, Basic) {
 
 The code for DeepState Test harness for Integer and Numeric vector in binseg package can be found here - 
 [RcppDeepState](https://github.com/akhikolla/RcppDeepState)
-and test harness can be found in [Testharness](https://github.com/akhikolla/RcppDeepState/blob/master/src/TestRcppharness.cpp)
+and test harness can be found in [Testharness](https://github.com/akhikolla/akhikolla.github.io/blob/master/htmls/binsegRcpp/inst/testfiles/rcpp_binseg_normal/rcpp_binseg_normal_DeepState_TestHarness.cpp)
 
 Thanks to `Dr.Toby Dylan Hocking` for his support on this project. This blog is kindly contributed to [R-bloggers](https://www.r-bloggers.com/). 
 <hr/>
