@@ -52,8 +52,8 @@ Initially, we would like to take an Rcpp Package and pass our randomized inputs 
 
 For this purpose, one such package of interest is `binsegRcpp`. It is a package that computes the statistical model for the efficient implementation of binary segmentation. In this package, we will pass the randomized inputs generated from new RcppDeepState_IntegerVector() and RcppDeepState_NumericVector() functions and check for any crashes or bugs.
 
-[binsegRcpp_package](https://github.com/tdhock/binsegRcpp/blob/master/src/rcpp_interface.cpp):
-This package consists of two functions. These functions take in NumericVector,IntegerVector as inputs and return a List. 
+[binsegRcpp_package](https://github.com/tdhock/binsegRcpp):
+This package consists of two Rcpp functions. These functions take in NumericVector,IntegerVector as inputs and return a List. 
 ```R
 //[[Rcpp::export]]
 Rcpp::List rcpp_binseg_normal(Rcpp::NumericVector, Rcpp::IntegerVector){}
