@@ -60,12 +60,12 @@ binseg.list <- get_fun_body(package_path)
  create_makefile(generatedTestharnessname)
 }
 ```
-The obtained lists from the functions are filtered and placed accordingly in the Testharness.You can refer to the function [deepstate_harness_create](https://github.com/akhikolla/RcppDeepState/blob/master/CreateRcppTestharness.R) here to understand in detail.
+The obtained lists from the functions are filtered and placed accordingly in the Testharness.You can refer to the function [deepstate_harness_create](https://github.com/akhikolla/RcppDeepState/blob/master/R/pkg_harness_create.R) here to understand in detail.
 
 In RcppDeepState, we have created the RcppDeepState.h header file in RcppDeepState/inst/include where all of the RcppDeepState_* function definitions are present, usually, header files placed in inst/include are considered to be in the root directory and can be accessed easily.
-Link to [RcppDeepState/inst/include](https://github.com/akhikolla/RcppDeepState/tree/master/RcppDeepState/inst/include) 
+Link to [RcppDeepState/inst/include](https://github.com/akhikolla/RcppDeepState/tree/master/inst/include) 
 
-In the header file, we have the member functions to generate randomized vectors for that particular datatype. There is a detailed description of generating these random functions in my [previous blog]( https://akhilakolla.github.io/posts/RcppDeepState-Introduction/)
+In the header file, we have the member functions to generate randomized vectors for that particular datatype. There is a detailed description of generating these random functions in my [previous blog](https://akhikolla.github.io/posts/RcppDeepState-Introduction/)
 
 **What happens inside the testharness?**
 
@@ -147,7 +147,7 @@ Rcpp::IntegerVector max_segments =RcppDeepState_IntegerVector();
 rcpp_binseg_normal(data_vec, max_segments);
 }
 ```
-For the code to compile first we need to install the binsegRcpp package in the system. After the installation, binsegRcpp/src has the compiled object files which are used during the compilation of testharness.You can find [binsegRcpp_package](https://github.com/tdhock/binsegRcpp/blob/master/src/rcpp_interface.cpp) here.
+For the code to compile first we need to install the binsegRcpp package in the system. After the installation, binsegRcpp/src has the compiled object files which are used during the compilation of testharness.You can find [binsegRcpp_package](https://github.com/tdhock/binsegRcpp) here.
  
 To compile the test harness of rcpp_binseg_normal(), we require a Makefile. The same deepstate_harness_create() will make a call to create_makefile() function which creates the respective makefile for the testharness. In our case, it created `rcpp_binseg_normal.Makefile` 
 
