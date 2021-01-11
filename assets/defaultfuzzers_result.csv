@@ -1,0 +1,45 @@
+"","Package","Function","Valgrind_Issue","Issued_Files","exported"
+"1","AGread","get_VM_C","Invalid read of size 8","get_VM_C.cpp : 22",FALSE
+"2","AGread","latch_accel","Invalid write of size 8","get_latch.cpp : 20",FALSE
+"3","ALassoSurvIC","fun_sublr","44 bytes in 1 blocks are possibly lost in loss record 22 of 1,325","fun_sublr.cpp : 18",FALSE
+"4","BAMBI","calc_corr_fl","37 bytes in 1 blocks are definitely lost in loss record 19 of 1,283","src/basic_c_fns.cpp : 172",FALSE
+"5","BAMBI","calc_corr_tau_1","37 bytes in 1 blocks are definitely lost in loss record 19 of 1,283","src/basic_c_fns.cpp : 151",FALSE
+"6","BAMBI","calc_corr_tau_2","37 bytes in 1 blocks are definitely lost in loss record 19 of 1,283","src/basic_c_fns.cpp : 119",FALSE
+"7","BAMBI","d_const_vmcos_mc","37 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 196",FALSE
+"8","BAMBI","dcos_manyx_onepar","Conditional jump or move depends on uninitialised value(s)","src/vmcos_llik_grad.cpp : 285",FALSE
+"9","BAMBI","dsin_manyx_onepar","Conditional jump or move depends on uninitialised value(s)","src/vmsin_llik_grad.cpp : 229",FALSE
+"10","BAMBI","dwnorm2_manyx_onepar","Conditional jump or move depends on uninitialised value(s)","src/wnorm2_llik_grad.cpp : 357",FALSE
+"11","BAMBI","ldcos_manyx_onepar","Conditional jump or move depends on uninitialised value(s)","src/vmcos_llik_grad.cpp : 1013",FALSE
+"12","BAMBI","ldsin_manyx_onepar","Conditional jump or move depends on uninitialised value(s)","src/vmsin_llik_grad.cpp : 1104",FALSE
+"13","BAMBI","log_const_univm_all","Conditional jump or move depends on uninitialised value(s)","src/univm_llik_grad.cpp : 26",FALSE
+"14","BAMBI","log_const_uniwnorm_all","Conditional jump or move depends on uninitialised value(s)","src/uniwnorm_llik_grad.cpp : 37",FALSE
+"15","BAMBI","log_const_vmcos_all","Conditional jump or move depends on uninitialised value(s)","src/vmcos_llik_grad.cpp : 237",FALSE
+"16","BAMBI","log_const_vmsin_all","Conditional jump or move depends on uninitialised value(s)","src/vmsin_llik_grad.cpp : 182",FALSE
+"17","BAMBI","log_const_wnorm2_all","Conditional jump or move depends on uninitialised value(s)","src/wnorm2_llik_grad.cpp : 52",FALSE
+"18","BAMBI","rcos_bimodal","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 464",FALSE
+"19","BAMBI","rcos_onepar","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 509",FALSE
+"20","BAMBI","rcos_unimodal","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 376",FALSE
+"21","BAMBI","rowVars","Conditional jump or move depends on uninitialised value(s)","src/basic_c_fns.cpp : 9",FALSE
+"22","BAMBI","rsin_onepar","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmsin_llik_grad.cpp : 507",FALSE
+"23","BAMBI","rsin_unimodal","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmsin_llik_grad.cpp : 358",FALSE
+"24","BAMBI","runivm_onepar","41 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/univm_llik_grad.cpp : 111",FALSE
+"25","BAMBI","vmcos_var_cor_singlepar_cpp","37 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 880",FALSE
+"26","BAMBI","vmcos_var_corr_mc","37 bytes in 1 blocks are definitely lost in loss record 21 of 1,351","src/vmcos_llik_grad.cpp : 880",FALSE
+"27","BAMBI","vmsin_var_cor_singlepar_cpp","37 bytes in 1 blocks are definitely lost in loss record 21 of 1,354","src/vmsin_llik_grad.cpp : 965",FALSE
+"28","BAMBI","vmsin_var_corr_mc","37 bytes in 1 blocks are definitely lost in loss record 21 of 1,353","src/vmsin_llik_grad.cpp : 965",FALSE
+"29","BCT","ML","62 bytes in 1 blocks are possibly lost in loss record 32 of 1,327","bct_rcpp.cpp : 472",TRUE
+"30","BCT","compute_counts","62 bytes in 1 blocks are possibly lost in loss record 32 of 1,332","bct_rcpp.cpp : 497",TRUE
+"31","BNSL","BDeu_cmi","Invalid read of size 8","mi_cmi.cpp : 112",FALSE
+"32","BNSL","BDeu_mi","Invalid read of size 8","mi_cmi.cpp : 65",FALSE
+"33","BNSL","Jeffreys_cmi","Invalid read of size 8","mi_cmi.cpp : 102",FALSE
+"34","BNSL","Jeffreys_mi","Invalid read of size 8","mi_cmi.cpp : 55",FALSE
+"35","BNSL","MDL_cmi","Invalid read of size 8","mi_cmi.cpp : 77",FALSE
+"36","BNSL","MDL_mi","Invalid read of size 8","mi_cmi.cpp : 28",FALSE
+"37","BNSL","cmi","Invalid read of size 8","mi_cmi.cpp : 102",TRUE
+"38","BNSL","cont_cmi","42 bytes in 1 blocks are possibly lost in loss record 21 of 1,357","mi_cmi.cpp : 158",FALSE
+"39","BNSL","cont_mi","42 bytes in 1 blocks are possibly lost in loss record 21 of 1,354","mi_cmi.cpp : 139",FALSE
+"40","BNSL","empirical_cmi","Invalid read of size 8","mi_cmi.cpp : 77",FALSE
+"41","BNSL","empirical_mi","Invalid read of size 8","mi_cmi.cpp : 28",FALSE
+"42","BNSL","mi","Invalid read of size 8","mi_cmi.cpp : 55",TRUE
+"43","BNSL","parent","Invalid read of size 4","parent_set.cpp : 71",FALSE
+"44","BWStest","murakami_stat_perms","Invalid read of size 4","murakami_stat.cpp : 185",TRUE
