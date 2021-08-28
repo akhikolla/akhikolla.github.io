@@ -1,1 +1,1 @@
-This blog helps you understand Integrating Rcpp with DeepState
+Personal website for blogs and research information
